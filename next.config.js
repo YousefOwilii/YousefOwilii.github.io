@@ -10,6 +10,8 @@ const nextConfig = {
   // as the site will be served from the root domain
   basePath: '',
   assetPrefix: '',
+  // Add trailingSlash to ensure proper routing with static export
+  trailingSlash: true,
 };
 
 module.exports = nextConfig; 

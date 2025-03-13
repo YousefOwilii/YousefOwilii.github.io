@@ -29,12 +29,12 @@ A modern, responsive personal portfolio website built with Next.js and Tailwind 
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/personal-website.git
+   git clone https://github.com/YousefOwilii/YousefOwilii.github.io.git
    ```
 
 2. Navigate to the project directory
    ```bash
-   cd personal-website
+   cd YousefOwilii.github.io
    ```
 
 3. Install dependencies

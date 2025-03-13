@@ -6,11 +6,9 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'export',
-  // Set the base path to match your GitHub repository name
-  // For example, if your repo is username.github.io, leave it as empty string
-  // If your repo is my-website, set it to '/my-website'
+  // For username.github.io repositories, both basePath and assetPrefix should be empty strings
+  // as the site will be served from the root domain
   basePath: '',
-  // Disable image optimization for static export
   assetPrefix: '',
 };
 

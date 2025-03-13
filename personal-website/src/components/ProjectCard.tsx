@@ -70,7 +70,7 @@ export default function ProjectCard({
                   src={companyLogo}
                   alt={companyName || title}
                   fill
-                  className="object-cover p-1"
+                  className="object-cover rounded-full"
                   onError={() => setLogoError(true)}
                 />
               ) : (

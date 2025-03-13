@@ -12,6 +12,12 @@ const nextConfig = {
   assetPrefix: '',
   // Add trailingSlash to ensure proper routing with static export
   trailingSlash: true,
+  // Disable image optimization for static export
+  experimental: {
+    images: {
+      allowFutureImage: true,
+    },
+  },
 };
 
 module.exports = nextConfig; 

@@ -7,21 +7,21 @@ import { useState } from "react";
 interface ProjectCardProps {
   title: string;
   description: string;
-  imageUrl: string;
-  companyLogo: string;
-  companyName: string;
   technologies: string[];
   projectUrl: string;
+  imageUrl: string;
+  companyName: string;
+  companyLogo: string;
 }
 
 export default function ProjectCard({
   title,
   description,
-  imageUrl,
-  companyLogo,
-  companyName,
   technologies,
   projectUrl,
+  imageUrl,
+  companyName,
+  companyLogo,
 }: ProjectCardProps) {
   const [imageError, setImageError] = useState(false);
   const [logoError, setLogoError] = useState(false);
@@ -42,7 +42,8 @@ export default function ProjectCard({
         .substring(0, 2);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-lg max-w-md mx-auto">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105 hover:shadow-xl">
+      {/* Project Image */}
       <div className="relative h-48 w-full">
         {imageError ? (
           <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
@@ -52,17 +53,14 @@ export default function ProjectCard({
           <Image
             src={imageUrl}
             alt={title}
-            width={400}
-            height={200}
-            className="object-cover w-full h-full"
+            fill
+            className="object-cover"
             onError={() => setImageError(true)}
           />
         )}
-      </div>
-      
-      <div className="p-6">
-        <div className="flex items-center mb-4">
-          <div className="relative h-10 w-10 mr-3 flex-shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+        <div className="absolute bottom-4 left-4 flex items-center">
+          <div className="relative h-8 w-8 rounded-full overflow-hidden bg-white mr-2">
             {logoError ? (
               <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full">
                 <span className="text-xs text-gray-500 dark:text-gray-400">{companyName.charAt(0)}</span>
@@ -71,36 +69,39 @@ export default function ProjectCard({
               <Image
                 src={companyLogo}
                 alt={companyName}
-                width={40}
-                height={40}
-                className="object-contain rounded-full"
+                fill
+                className="object-contain"
                 onError={() => setLogoError(true)}
               />
             )}
           </div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">{companyName}</span>
+          <span className="text-white text-sm font-medium">{companyName}</span>
         </div>
-        
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
-        
+      </div>
+      
+      {/* Content */}
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{title}</h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">{description}</p>
         
-        <div className="mb-4 flex flex-wrap gap-2">
+        {/* Technologies */}
+        <div className="flex flex-wrap gap-2 mb-4">
           {technologies.map((tech, index) => (
             <span 
               key={index}
-              className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
+              className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium rounded"
             >
               {tech}
             </span>
           ))}
         </div>
         
+        {/* Link */}
         <a 
           href={projectUrl}
-          className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
           target="_blank"
           rel="noopener noreferrer"
+          className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
         >
           View Project
         </a>

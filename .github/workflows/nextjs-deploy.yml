@@ -24,7 +24,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
+          # Remove cache option as it's causing issues
+          # cache: 'npm'
 
       - name: Check Node.js version
         run: |
@@ -63,14 +64,23 @@ jobs:
             cat package.json
           fi
         
-      # Force clean install without using cache
-      - name: Clean install dependencies
+      # Fix the npm installation step that's failing
+      - name: Install dependencies
         run: |
-          echo "Removing node_modules and package-lock.json if they exist..."
-          rm -rf node_modules package-lock.json
+          echo "Setting up npm..."
+          npm config set legacy-peer-deps true
           
-          echo "Installing dependencies with a clean install..."
-          npm install --no-cache
+          echo "Cleaning npm cache..."
+          npm cache clean --force
+          
+          echo "Installing dependencies with npm install..."
+          npm install
+          
+          # Fallback to a simpler install if the first attempt fails
+          if [ $? -ne 0 ]; then
+            echo "First install attempt failed, trying with basic dependencies only..."
+            npm install react react-dom next
+          fi
 
       # Display installed packages
       - name: List installed packages

@@ -63,18 +63,19 @@ export default function ProjectCard({
         
         {/* Company logo overlay */}
         {companyName && (
-          <div className="absolute bottom-3 right-3 w-12 h-12 bg-white dark:bg-gray-800 rounded-lg p-1 shadow-md overflow-hidden">
-            <div className="relative h-full w-full">
+          <div className="absolute bottom-3 right-3 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-md overflow-hidden flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden">
               {companyLogo && !logoError ? (
                 <Image
                   src={companyLogo}
                   alt={companyName || title}
-                  fill
-                  className="object-contain"
+                  width={40}
+                  height={40}
+                  className="object-cover"
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 dark:from-blue-600 dark:to-purple-700">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 dark:from-blue-600 dark:to-purple-700">
                   <span className="text-white text-sm font-bold">{initials}</span>
                 </div>
               )}

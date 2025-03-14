@@ -17,10 +17,6 @@ const nextConfig = {
   assetPrefix: '',
   // Add trailingSlash to ensure proper routing with static export
   trailingSlash: true,
-  // Disable font optimization
-  optimizeFonts: false,
-  // Disable minification
-  swcMinify: false,
   // Ensure CSS is properly included
   experimental: {
     forceSwcTransforms: true,

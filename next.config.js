@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    unoptimized: true,
     domains: ['via.placeholder.com'],
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -17,14 +17,6 @@ const nextConfig = {
   assetPrefix: '',
   // Add trailingSlash to ensure proper routing with static export
   trailingSlash: true,
-  // Ensure CSS is properly included
-  experimental: {
-    forceSwcTransforms: true,
-  },
-  // Disable CSS modules
-  webpack: (config) => {
-    return config;
-  },
 };
 
 module.exports = nextConfig; 

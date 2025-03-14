@@ -24,22 +24,46 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
 
+      # Explicitly create .nojekyll file
+      - name: Create .nojekyll file
+        run: touch .nojekyll
+        
+      # Display package.json for debugging
+      - name: Display package.json
+        run: cat package.json
+        
+      # Clean install without using cache
       - name: Install dependencies
         run: |
           echo "Installing dependencies..."
-          npm ci --verbose
-        
-      - name: Create .nojekyll file
-        run: touch .nojekyll
+          npm ci --no-cache
 
+      # Display installed packages
+      - name: List installed packages
+        run: npm list --depth=0
+        
+      # Build with Next.js without linting
       - name: Build with Next.js (without linting)
         run: |
           echo "Building Next.js site without linting..."
           npm run build -- --no-lint
-          ls -la out/
+          
+      # List output directory contents
+      - name: List output directory
+        run: |
+          echo "Checking output directory..."
+          ls -la
+          if [ -d "out" ]; then
+            echo "Contents of out directory:"
+            ls -la out/
+          else
+            echo "out directory not found!"
+            echo "Checking for other possible output directories:"
+            ls -la .next/ || echo ".next directory not found"
+          fi
 
+      # Upload the build output
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

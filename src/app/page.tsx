@@ -1,8 +1,59 @@
 import Image from "next/image";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import ProjectCard from "../components/ProjectCard";
 import ContactForm from "../components/ContactForm";
 import TypewriterEffect from "../components/TypewriterEffect";
+import StylizedQuote from "../components/StylizedQuote";
+
+// Project data
+const projects = [
+  {
+    title: "This website",
+    description: "This personal project showcases my skills in modern web development. Built with Next.js, TypeScript, and Tailwind CSS, it features a responsive design, dark mode, and interactive elements like the typewriter effect.",
+    technologies: ["Next.js", "TypeScript", "Tailwind CSS", "React"],
+    projectUrl: "https://yousefowili.me",
+    companyName: "Personal Project",
+    imageUrl: "/images/projects/portfolio.jpg",
+    companyLogo: "/images/projects/personal-logo.png",
+  },
+  {
+    title: "Copywriting Services",
+    description: "Worked with CopyLab to produce compelling copy for businesses and their websites. Created engaging content that drives conversions and improves brand messaging.",
+    technologies: ["Copywriting", "Content Strategy", "SEO", "Brand Messaging"],
+    projectUrl: "#",
+    companyName: "CopyLab",
+    imageUrl: "/images/projects/copylab.jpg",
+    companyLogo: "/images/projects/copylab-logo.png",
+  },
+  {
+    title: "AI Agents for Business",
+    description: "Working with ForceAI to streamline AI agents for businesses. Our latest work focuses on creating lead generation and outreach agents that automate customer acquisition processes.",
+    technologies: ["AI", "Python", "LangChain", "OpenAI API"],
+    projectUrl: "#",
+    companyName: "ForceAI",
+    imageUrl: "/images/projects/forceai.jpg",
+    companyLogo: "/images/projects/forceai-logo.png",
+  },
+  {
+    title: "Media Production",
+    description: "Collaborated with GMP (Generic Media Production) to produce video ads, restaurant menus, photo ad campaigns, and more. Created visually appealing content that effectively communicates brand messages.",
+    technologies: ["Video Production", "Graphic Design", "Photography", "Adobe Suite"],
+    projectUrl: "#",
+    companyName: "GMP",
+    imageUrl: "/images/projects/gmp.jpg",
+    companyLogo: "/images/projects/gmp-logo.png",
+  },
+  {
+    title: "Time Tracking App",
+    description: "Currently working with Ease to develop 'Time', a mobile app that helps users track and budget their time throughout the day. The app features intuitive UI/UX and powerful time management tools.",
+    technologies: ["SwiftUI", "iOS Development", "UI/UX Design", "Firebase"],
+    projectUrl: "#",
+    companyName: "Ease",
+    imageUrl: "/images/projects/ease.jpg",
+    companyLogo: "/images/projects/ease-logo.png",
+  },
+];
 
 export default function Home() {
   return (
@@ -38,33 +89,33 @@ export default function Home() {
               Get in Touch
             </a>
             <a 
-              href="#about" 
+              href="#projects" 
               className="px-6 py-3 border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-400 text-gray-800 dark:text-white font-medium rounded-lg transition"
             >
-              About Me
+              View My Work
             </a>
           </div>
         </div>
       </section>
 
-      {/* Simple About Section */}
+      {/* About Section */}
       <section id="about" className="bg-white dark:bg-gray-800 py-16 md:py-24">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
             About Me
           </h2>
           <div className="max-w-3xl mx-auto">
-            <div className="bg-gray-50 dark:bg-gray-900 p-8 rounded-lg shadow-md">
-              <p className="mb-4 text-gray-700 dark:text-gray-300">
+            <StylizedQuote>
+              <p className="mb-4">
                 My name is Yousef, the world calls me Owili.
               </p>
-              <p className="mb-4 text-gray-700 dark:text-gray-300">
+              <p className="mb-4">
                 I'm currently studying computer science at the British University in Egypt, majoring in Artificial Intelligence. I always had this obsession of wanting to do "something". Something that is positively impactful in some regard. It all started at a young age seeing the dedication of some very hard working and talented people, and it made me tap into courses, videos, anything that can make me more like them. I worked on projects from web development, to creating copy and fascinations for small businesses, to designing graphic and creating content for local restaurants and gyms.
               </p>
-              <p className="text-gray-700 dark:text-gray-300">
+              <p>
                 I'm also that guy. The perfectionist, but at the same time, I don't let it negatively affect my progress. When I do things, I do them perfect and quick. I'm fast not sluggish. I completely and utterly honor my word, when I say something, I do it. A handshake, means a deal is a deal.
               </p>
-            </div>
+            </StylizedQuote>
           </div>
           
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -84,6 +135,39 @@ export default function Home() {
               <div className="text-blue-600 dark:text-blue-400 text-4xl font-bold mb-2">5+</div>
               <div className="text-gray-600 dark:text-gray-300">Technologies</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Projects Section */}
+      <section id="projects" className="py-16 md:py-24">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
+            My Projects
+          </h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {projects.map((project, index) => (
+              <ProjectCard
+                key={index}
+                title={project.title}
+                description={project.description}
+                technologies={project.technologies}
+                projectUrl={project.projectUrl}
+                imageUrl={project.imageUrl}
+                companyName={project.companyName}
+                companyLogo={project.companyLogo}
+              />
+            ))}
+          </div>
+          
+          <div className="text-center mt-12">
+            <a 
+              href="#" 
+              className="px-6 py-3 border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-400 text-gray-800 dark:text-white font-medium rounded-lg transition"
+            >
+              View All Projects
+            </a>
           </div>
         </div>
       </section>

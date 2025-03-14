@@ -1,5 +1,6 @@
 'use client';
 
+// Updated ProjectCard component with circular logos
 import Image from "next/image";
 import { useState } from "react";
 

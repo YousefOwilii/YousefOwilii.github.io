@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
@@ -14,8 +15,16 @@ export default function Navbar() {
   return (
     <nav className="container mx-auto px-6 py-6">
       <div className="flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold text-gray-800 dark:text-white">
-          YO
+        <Link href="/" className="flex items-center">
+          <div className="relative w-8 h-8 mr-2">
+            <Image 
+              src="/images/projects/personal-logo.png" 
+              alt="Yousef Owili" 
+              fill 
+              className="object-contain"
+            />
+          </div>
+          <span className="text-xl font-bold text-gray-800 dark:text-white">Yousef Owili</span>
         </Link>
         
         <div className="hidden md:flex items-center space-x-8">
@@ -49,40 +58,42 @@ export default function Navbar() {
       </div>
       
       {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 absolute left-4 right-4 z-10">
-          <div className="flex flex-col space-y-4">
-            <Link 
-              href="/" 
-              className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              href="#about" 
-              className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link 
-              href="#projects" 
-              className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Projects
-            </Link>
-            <Link 
-              href="#contact" 
-              className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact
-            </Link>
-          </div>
+      <div 
+        className={`md:hidden mt-4 bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 absolute left-4 right-4 z-10 transform transition-all duration-300 ease-in-out ${
+          isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
+        }`}
+      >
+        <div className="flex flex-col space-y-4">
+          <Link 
+            href="/" 
+            className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link 
+            href="#about" 
+            className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            About
+          </Link>
+          <Link 
+            href="#projects" 
+            className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Projects
+          </Link>
+          <Link 
+            href="#contact" 
+            className="text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition py-2"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Contact
+          </Link>
         </div>
-      )}
+      </div>
     </nav>
   );
 } 

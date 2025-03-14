@@ -3,26 +3,55 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProjectCard from "../components/ProjectCard";
 import ContactForm from "../components/ContactForm";
+import TypewriterEffect from "../components/TypewriterEffect";
+import StylizedQuote from "../components/StylizedQuote";
 
-// Sample project data
+// Project data
 const projects = [
   {
-    title: "Project One",
-    description: "A brief description of this amazing project and the technologies used.",
-    technologies: ["React", "Node.js"],
-    projectUrl: "#",
+    title: "This website",
+    description: "This personal project showcases my skills in modern web development. Built with Next.js, TypeScript, and Tailwind CSS, it features a responsive design, dark mode, and interactive elements like the typewriter effect.",
+    technologies: ["Next.js", "TypeScript", "Tailwind CSS", "React"],
+    projectUrl: "https://yousefowili.me",
+    companyName: "Personal Project",
+    imageUrl: "/images/projects/portfolio.jpg",
+    companyLogo: "/images/projects/personal-logo.png",
   },
   {
-    title: "Project Two",
-    description: "A brief description of this amazing project and the technologies used.",
-    technologies: ["Next.js", "Tailwind"],
+    title: "Copywriting Services",
+    description: "Worked with CopyLab to produce compelling copy for businesses and their websites. Created engaging content that drives conversions and improves brand messaging.",
+    technologies: ["Copywriting", "Content Strategy", "SEO", "Brand Messaging"],
     projectUrl: "#",
+    companyName: "CopyLab",
+    imageUrl: "/images/projects/copylab.jpg",
+    companyLogo: "/images/projects/copylab-logo.png",
   },
   {
-    title: "Project Three",
-    description: "A brief description of this amazing project and the technologies used.",
-    technologies: ["TypeScript", "MongoDB"],
+    title: "AI Agents for Business",
+    description: "Working with ForceAI to streamline AI agents for businesses. Our latest work focuses on creating lead generation and outreach agents that automate customer acquisition processes.",
+    technologies: ["AI", "Python", "LangChain", "OpenAI API"],
     projectUrl: "#",
+    companyName: "ForceAI",
+    imageUrl: "/images/projects/forceai.jpg",
+    companyLogo: "/images/projects/forceai-logo.png",
+  },
+  {
+    title: "Media Production",
+    description: "Collaborated with GMP (Generic Media Production) to produce video ads, restaurant menus, photo ad campaigns, and more. Created visually appealing content that effectively communicates brand messages.",
+    technologies: ["Video Production", "Graphic Design", "Photography", "Adobe Suite"],
+    projectUrl: "#",
+    companyName: "GMP",
+    imageUrl: "/images/projects/gmp.jpg",
+    companyLogo: "/images/projects/gmp-logo.png",
+  },
+  {
+    title: "Time Tracking App",
+    description: "Currently working with Ease to develop 'Time', a mobile app that helps users track and budget their time throughout the day. The app features intuitive UI/UX and powerful time management tools.",
+    technologies: ["SwiftUI", "iOS Development", "UI/UX Design", "Firebase"],
+    projectUrl: "#",
+    companyName: "Ease",
+    imageUrl: "/images/projects/ease.jpg",
+    companyLogo: "/images/projects/ease-logo.png",
   },
 ];
 
@@ -33,15 +62,26 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="container mx-auto px-6 py-16 md:py-24 flex flex-col md:flex-row items-center">
-        <div className="md:w-1/2 mb-12 md:mb-0">
+      <section className="container mx-auto px-6 py-16 md:py-24">
+        <div className="w-full text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Hi, I'm <span className="text-blue-600 dark:text-blue-400">Yousef Owili</span>
           </h1>
+          <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            <TypewriterEffect 
+              strings={[
+                "AI Agents Developer",
+                "Copywriter",
+                "Full Stack Developer",
+                "SwiftUI App Developer",
+                "Videographer"
+              ]}
+            />
+          </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-            Full-stack developer passionate about creating beautiful, functional web experiences.
+            A jack of all trades can be a master of all.
           </p>
-          <div className="flex space-x-4">
+          <div className="flex justify-center space-x-4">
             <a 
               href="#contact" 
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
@@ -56,14 +96,6 @@ export default function Home() {
             </a>
           </div>
         </div>
-        <div className="md:w-1/2 flex justify-center">
-          <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl">
-            {/* Replace with your profile image */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-6xl font-bold">
-              YO
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* About Section */}
@@ -72,16 +104,18 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
             About Me
           </h2>
-          <div className="max-w-3xl mx-auto text-lg text-gray-600 dark:text-gray-300 space-y-6">
-            <p>
-              I'm a passionate developer with expertise in modern web technologies. I love building intuitive and performant applications that solve real-world problems.
-            </p>
-            <p>
-              My journey in tech started with [your background]. Since then, I've worked on a variety of projects ranging from [types of projects].
-            </p>
-            <p>
-              When I'm not coding, you can find me [your hobbies/interests].
-            </p>
+          <div className="max-w-3xl mx-auto">
+            <StylizedQuote>
+              <p className="mb-4">
+                My name is Yousef, the world calls me Owili.
+              </p>
+              <p className="mb-4">
+                I'm currently studying computer science at the British University in Egypt, majoring in Artificial Intelligence. I always had this obsession of wanting to do "something". Something that is positively impactful in some regard. It all started at a young age seeing the dedication of some very hard working and talented people, and it made me tap into courses, videos, anything that can make me more like them. I worked on projects from web development, to creating copy and fascinations for small businesses, to designing graphic and creating content for local restaurants and gyms.
+              </p>
+              <p>
+                I'm also that guy. The perfectionist, but at the same time, I don't let it negatively affect my progress. When I do things, I do them perfect and quick. I'm fast not sluggish. I completely and utterly honor my word, when I say something, I do it. A handshake, means a deal is a deal.
+              </p>
+            </StylizedQuote>
           </div>
           
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -120,6 +154,9 @@ export default function Home() {
                 description={project.description}
                 technologies={project.technologies}
                 projectUrl={project.projectUrl}
+                imageUrl={project.imageUrl}
+                companyName={project.companyName}
+                companyLogo={project.companyLogo}
               />
             ))}
           </div>
@@ -144,7 +181,7 @@ export default function Home() {
           
           <ContactForm />
           
-          <div className="mt-16 flex flex-col md:flex-row justify-center space-y-8 md:space-y-0 md:space-x-12">
+          <div className="mt-16 flex justify-center">
             <div className="flex items-center">
               <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full mr-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,19 +190,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Email</h3>
-                <p className="text-gray-600 dark:text-gray-300">youremail@example.com</p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Location</h3>
-                <p className="text-gray-600 dark:text-gray-300">Your City, Country</p>
+                <p className="text-gray-600 dark:text-gray-300">yousefowili_official@outlook.com</p>
               </div>
             </div>
           </div>

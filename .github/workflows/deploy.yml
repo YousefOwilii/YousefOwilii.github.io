@@ -23,12 +23,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      # Cache the Next.js build cache
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: personal-website/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('personal-website/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+      
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: 'personal-website/package-lock.json'
+          # Disable the built-in caching mechanism of setup-node
+          cache: false
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -46,14 +55,6 @@ jobs:
         run: |
           echo "Contents of personal-website/out:"
           ls -la personal-website/out/
-      
-      - name: Cache Next.js build
-        uses: actions/cache@v4
-        with:
-          path: personal-website/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('personal-website/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

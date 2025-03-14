@@ -10,6 +10,7 @@ A modern, responsive personal portfolio website built with Next.js and Tailwind 
 - Contact form with validation
 - Project showcase section
 - About section
+- Deployed with GitHub Actions
 
 ## Technologies Used
 
@@ -59,4 +60,4 @@ MIT
 
 ## Contact
 
-Yousef Owili - youremail@example.com
+Yousef Owili - yousefowili_official@outlook.com

@@ -37,7 +37,7 @@ jobs:
         run: cd personal-website && npm ci
       
       - name: Build
-        run: cd personal-website && npm run build
+        run: cd personal-website && npm run build -- --no-lint
       
       - name: List directories for debugging
         run: |

@@ -1,6 +1,10 @@
-name: Manual Next.js Deploy
+name: Next.js Deploy
 
 on:
+  # Trigger deployment automatically on push to main branch
+  push:
+    branches: [ main ]
+  # Keep the manual trigger option
   workflow_dispatch:
     inputs:
       deploy_message:

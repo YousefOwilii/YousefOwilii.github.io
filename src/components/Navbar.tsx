@@ -3,13 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import dynamic from 'next/dynamic';
-
-// Dynamically import ThemeToggle to avoid SSR issues
-const ThemeToggle = dynamic(() => import('./ThemeToggle'), {
-  ssr: false,
-  loading: () => <div className="w-10 h-10"></div>
-});
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

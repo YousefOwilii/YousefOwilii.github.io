@@ -26,13 +26,19 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 16
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
       - name: Install dependencies
         run: cd personal-website && npm ci
+      
+      - name: Fix case sensitivity issues
+        run: |
+          cd personal-website
+          # Ensure all import paths match the actual file names
+          find src -type f -name "*.tsx" -o -name "*.ts" | xargs grep -l "import.*from.*components" | xargs sed -i 's/\.\.\/components\/Footer/\.\.\/components\/Footer/g'
       
       - name: Build
         run: cd personal-website && npm run build -- --no-lint

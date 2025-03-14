@@ -3,8 +3,14 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ProjectCard from "../components/ProjectCard";
 import ContactForm from "../components/ContactForm";
-import TypewriterEffect from "../components/TypewriterEffect";
+import dynamic from 'next/dynamic';
 import StylizedQuote from "../components/StylizedQuote";
+
+// Dynamically import components that use browser-specific APIs
+const TypewriterEffect = dynamic(() => import('../components/TypewriterEffect'), {
+  ssr: false,
+  loading: () => <span className="text-blue-600 dark:text-blue-400">Loading...</span>
+});
 
 // Project data
 const projects = [

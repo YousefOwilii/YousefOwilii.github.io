@@ -27,15 +27,14 @@ jobs:
       - name: Build
         run: cd personal-website && npm run build
 
-      - name: Move build output to root/out
+      - name: Copy build output to root
         run: |
-          mkdir -p out
-          cp -r personal-website/out/* out/
-          touch out/.nojekyll
+          cp -r personal-website/out/* .
+          touch .nojekyll
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: out
+          folder: .
           branch: gh-pages
           clean: true 

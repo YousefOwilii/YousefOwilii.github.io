@@ -28,20 +28,21 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
+          cache-dependency-path: 'personal-website/package-lock.json'
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
       - name: Install dependencies
-        run: npm ci
+        run: cd personal-website && npm ci
       
       - name: Build
-        run: npm run build
+        run: cd personal-website && npm run build
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ./personal-website/out
 
   deploy:
     environment:

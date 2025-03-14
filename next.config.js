@@ -17,6 +17,10 @@ const nextConfig = {
   assetPrefix: '',
   // Add trailingSlash to ensure proper routing with static export
   trailingSlash: true,
+  // Ensure CSS is properly included in the static export
+  optimizeFonts: false,
+  // Disable CSS optimization to ensure styles are properly included
+  swcMinify: false,
 };
 
 module.exports = nextConfig; 

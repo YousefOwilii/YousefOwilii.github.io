@@ -74,7 +74,7 @@ jobs:
       - name: Build with Next.js (without linting)
         run: |
           echo "Building Next.js site without linting..."
-          npm run build -- --no-lint || {
+          NODE_ENV=production npm run build -- --no-lint || {
             echo "Build failed. Checking for error logs..."
             if [ -f ".next/error.log" ]; then
               echo "Error log found:"
@@ -93,6 +93,10 @@ jobs:
             exit 1
           }
           
+      # Ensure .nojekyll file is in the out directory
+      - name: Ensure .nojekyll in out directory
+        run: touch out/.nojekyll
+          
       # List output directory contents
       - name: List output directory
         run: |
@@ -101,6 +105,8 @@ jobs:
           if [ -d "out" ]; then
             echo "Contents of out directory:"
             ls -la out/
+            echo "Checking for CSS files:"
+            find out -name "*.css" | sort
           else
             echo "out directory not found!"
             echo "Checking for other possible output directories:"

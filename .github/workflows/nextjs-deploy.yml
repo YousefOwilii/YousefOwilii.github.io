@@ -24,8 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # Remove cache option as it's causing issues
-          # cache: 'npm'
+          cache: 'npm'
 
       - name: Check Node.js version
         run: |
@@ -42,45 +41,14 @@ jobs:
       - name: Display package.json
         run: cat package.json
         
-      # Check for potential dependency issues
-      - name: Check for dependency issues
-        run: |
-          echo "Checking for potential dependency issues..."
-          if grep -q "\"react\": \"^19" package.json; then
-            echo "WARNING: React 19 is very new and may cause compatibility issues"
-            echo "Downgrading React to a stable version"
-            sed -i 's/"react": "\^19.0.0"/"react": "18.2.0"/g' package.json
-            sed -i 's/"react-dom": "\^19.0.0"/"react-dom": "18.2.0"/g' package.json
-            sed -i 's/"@types\/react": "\^19"/"@types\/react": "18.2.0"/g' package.json
-            sed -i 's/"@types\/react-dom": "\^19"/"@types\/react-dom": "18.2.0"/g' package.json
-            cat package.json
-          fi
-          
-          if grep -q "\"next\": \"15" package.json; then
-            echo "WARNING: Next.js 15 is very new and may cause compatibility issues"
-            echo "Downgrading Next.js to a stable version"
-            sed -i 's/"next": "15.2.2"/"next": "14.0.4"/g' package.json
-            sed -i 's/"eslint-config-next": "15.2.2"/"eslint-config-next": "14.0.4"/g' package.json
-            cat package.json
-          fi
-        
-      # Fix the npm installation step that's failing
+      # Clean install dependencies
       - name: Install dependencies
         run: |
-          echo "Setting up npm..."
-          npm config set legacy-peer-deps true
+          echo "Removing node_modules and package-lock.json if they exist..."
+          rm -rf node_modules package-lock.json
           
-          echo "Cleaning npm cache..."
-          npm cache clean --force
-          
-          echo "Installing dependencies with npm install..."
+          echo "Installing dependencies with a clean install..."
           npm install
-          
-          # Fallback to a simpler install if the first attempt fails
-          if [ $? -ne 0 ]; then
-            echo "First install attempt failed, trying with basic dependencies only..."
-            npm install react react-dom next
-          fi
 
       # Display installed packages
       - name: List installed packages

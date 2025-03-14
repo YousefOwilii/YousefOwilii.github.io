@@ -17,6 +17,8 @@ const nextConfig = {
   assetPrefix: '',
   // Add trailingSlash to ensure proper routing with static export
   trailingSlash: true,
+  // Ignore the pages.bak directory
+  pageExtensions: ['tsx', 'ts', 'jsx', 'js'].filter(ext => !ext.includes('bak')),
 };
 
 module.exports = nextConfig; 

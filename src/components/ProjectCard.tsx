@@ -42,7 +42,7 @@ export default function ProjectCard({
         .substring(0, 2);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-lg">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-transform hover:scale-105 hover:shadow-lg max-w-md mx-auto">
       <div className="relative h-48 w-full">
         {imageError ? (
           <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
@@ -52,8 +52,9 @@ export default function ProjectCard({
           <Image
             src={imageUrl}
             alt={title}
-            fill
-            className="object-cover"
+            width={400}
+            height={200}
+            className="object-cover w-full h-full"
             onError={() => setImageError(true)}
           />
         )}
@@ -61,7 +62,7 @@ export default function ProjectCard({
       
       <div className="p-6">
         <div className="flex items-center mb-4">
-          <div className="relative h-10 w-10 mr-3">
+          <div className="relative h-10 w-10 mr-3 flex-shrink-0">
             {logoError ? (
               <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full">
                 <span className="text-xs text-gray-500 dark:text-gray-400">{companyName.charAt(0)}</span>
@@ -70,7 +71,8 @@ export default function ProjectCard({
               <Image
                 src={companyLogo}
                 alt={companyName}
-                fill
+                width={40}
+                height={40}
                 className="object-contain rounded-full"
                 onError={() => setLogoError(true)}
               />

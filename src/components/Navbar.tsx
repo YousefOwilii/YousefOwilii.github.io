@@ -20,7 +20,8 @@ export default function Navbar() {
             <Image 
               src="/images/projects/personal-logo.png" 
               alt="Yousef Owili" 
-              fill 
+              width={32}
+              height={32}
               className="object-contain"
             />
           </div>

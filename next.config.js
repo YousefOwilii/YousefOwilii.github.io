@@ -4,6 +4,12 @@ const nextConfig = {
   images: {
     domains: ['via.placeholder.com'],
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   output: 'export',
   // For username.github.io repositories, both basePath and assetPrefix should be empty strings

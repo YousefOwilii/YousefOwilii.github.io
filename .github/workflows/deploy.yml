@@ -39,6 +39,9 @@ jobs:
       - name: Build
         run: cd personal-website && npm run build -- --no-lint
       
+      - name: Create CNAME file
+        run: echo "yousefowili.me" > personal-website/out/CNAME
+      
       - name: List directories for debugging
         run: |
           echo "Contents of personal-website/out:"

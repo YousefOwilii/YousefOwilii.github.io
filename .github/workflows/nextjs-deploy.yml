@@ -86,13 +86,6 @@ jobs:
       - name: List installed packages
         run: npm list --depth=0
         
-      # Create a simple test page to ensure build works
-      - name: Create test page
-        run: |
-          echo "Creating a simple test page to ensure build works..."
-          mkdir -p src/app
-          echo 'export default function Home() { return <div>Hello World</div> }' > src/app/page.tsx
-        
       # Verify build script in package.json
       - name: Verify build script
         run: |

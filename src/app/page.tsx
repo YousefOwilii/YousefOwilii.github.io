@@ -3,7 +3,6 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactForm from "../components/ContactForm";
 import TypewriterEffect from "../components/TypewriterEffect";
-import StylizedQuote from "../components/StylizedQuote";
 
 export default function Home() {
   return (
@@ -48,24 +47,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section */}
+      {/* Simple About Section */}
       <section id="about" className="bg-white dark:bg-gray-800 py-16 md:py-24">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
             About Me
           </h2>
           <div className="max-w-3xl mx-auto">
-            <StylizedQuote>
-              <p className="mb-4">
+            <div className="bg-gray-50 dark:bg-gray-900 p-8 rounded-lg shadow-md">
+              <p className="mb-4 text-gray-700 dark:text-gray-300">
                 My name is Yousef, the world calls me Owili.
               </p>
-              <p className="mb-4">
+              <p className="mb-4 text-gray-700 dark:text-gray-300">
                 I'm currently studying computer science at the British University in Egypt, majoring in Artificial Intelligence. I always had this obsession of wanting to do "something". Something that is positively impactful in some regard. It all started at a young age seeing the dedication of some very hard working and talented people, and it made me tap into courses, videos, anything that can make me more like them. I worked on projects from web development, to creating copy and fascinations for small businesses, to designing graphic and creating content for local restaurants and gyms.
               </p>
-              <p>
+              <p className="text-gray-700 dark:text-gray-300">
                 I'm also that guy. The perfectionist, but at the same time, I don't let it negatively affect my progress. When I do things, I do them perfect and quick. I'm fast not sluggish. I completely and utterly honor my word, when I say something, I do it. A handshake, means a deal is a deal.
               </p>
-            </StylizedQuote>
+            </div>
           </div>
           
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8">

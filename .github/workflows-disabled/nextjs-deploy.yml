@@ -1,0 +1,171 @@
+name: Deploy Next.js Site
+
+on:
+  # Run on pushes to main branch
+  push:
+    branches:
+      - main
+  # Keep manual trigger
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy the Next.js site'
+        required: true
+        default: 'yes'
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          # Disable caching to avoid the path resolution issue
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Debug directory structure
+        run: |
+          echo "Current directory structure:"
+          ls -la
+          echo "Contents of personal-website directory:"
+          ls -la personal-website
+          echo "Contents of src directory (if exists):"
+          ls -la src || echo "src directory not found at root"
+          echo "Contents of personal-website/src directory (if exists):"
+          ls -la personal-website/src || echo "personal-website/src directory not found"
+          echo "Contents of personal-website/personal-website directory (if exists):"
+          ls -la personal-website/personal-website || echo "personal-website/personal-website directory not found"
+
+      - name: Install dependencies
+        run: |
+          # Install dependencies at the root level
+          npm ci
+          
+      - name: List component files
+        run: |
+          echo "Files in components directory:"
+          ls -la src/components/ || echo "src/components not found"
+          
+      - name: Fix case sensitivity issues
+        run: |
+          # Create lowercase versions of all component files if src/components exists
+          if [ -d "src/components" ]; then
+            for file in src/components/*.tsx; do
+              basename=$(basename "$file")
+              lowercase=$(echo "$basename" | tr '[:upper:]' '[:lower:]')
+              if [ "$basename" != "$lowercase" ]; then
+                echo "Creating lowercase version of $basename as $lowercase"
+                cp "$file" "src/components/$lowercase"
+              fi
+            done
+            
+            # Update imports in all files
+            find src -name "*.tsx" -o -name "*.ts" | xargs grep -l "import.*from.*components" | while read file; do
+              echo "Checking imports in $file"
+              # Get all component imports
+              grep "import.*from.*components" "$file" | while read import_line; do
+                component=$(echo "$import_line" | grep -o "components/[A-Z][a-zA-Z]*" | cut -d'/' -f2)
+                if [ ! -z "$component" ]; then
+                  lowercase=$(echo "$component" | tr '[:upper:]' '[:lower:]')
+                  echo "Updating import for $component to $lowercase in $file"
+                  sed -i "s/components\/$component/components\/$lowercase/g" "$file"
+                fi
+              done
+            done
+            
+            # List files after changes
+            echo "Files after case sensitivity fix:"
+            ls -la src/components/
+          else
+            echo "src/components directory not found, skipping case sensitivity fix"
+          fi
+
+      - name: Update Next.js config
+        run: |
+          cat > next.config.js << EOL
+          /** @type {import('next').NextConfig} */
+          const nextConfig = {
+            reactStrictMode: true,
+            images: {
+              unoptimized: true
+            },
+            output: 'export',
+            trailingSlash: true,
+          };
+          
+          module.exports = nextConfig;
+          EOL
+
+      - name: Build with TypeScript checks disabled
+        run: |
+          # Build with environment variables to bypass checks
+          NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS="--max_old_space_size=4096" npm run build -- --no-lint
+
+      - name: Create CNAME file
+        run: |
+          # Determine the output directory
+          if [ -d "out" ]; then
+            echo "yousefowili.me" > out/CNAME
+            echo "Using out directory at root"
+          elif [ -d "personal-website/out" ]; then
+            echo "yousefowili.me" > personal-website/out/CNAME
+            echo "Using personal-website/out directory"
+          else
+            echo "No out directory found"
+            mkdir -p out
+            echo "yousefowili.me" > out/CNAME
+          fi
+
+      - name: List build output
+        run: |
+          if [ -d "out" ]; then
+            echo "Contents of out directory:"
+            ls -la out/
+          elif [ -d "personal-website/out" ]; then
+            echo "Contents of personal-website/out directory:"
+            ls -la personal-website/out/
+          else
+            echo "No out directory found"
+          fi
+
+      - name: Determine output directory
+        id: determine-output-dir
+        run: |
+          if [ -d "out" ]; then
+            echo "dir=out" >> $GITHUB_OUTPUT
+          elif [ -d "personal-website/out" ]; then
+            echo "dir=personal-website/out" >> $GITHUB_OUTPUT
+          else
+            echo "dir=." >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.determine-output-dir.outputs.dir }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 

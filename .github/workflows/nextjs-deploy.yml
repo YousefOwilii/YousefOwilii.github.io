@@ -1,7 +1,11 @@
 name: Deploy Next.js Site
 
 on:
-  # Manual trigger
+  # Run on pushes to main branch
+  push:
+    branches:
+      - main
+  # Keep manual trigger
   workflow_dispatch:
     inputs:
       deploy:

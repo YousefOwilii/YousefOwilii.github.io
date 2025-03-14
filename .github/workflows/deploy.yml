@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,9 +27,15 @@ jobs:
       - name: Build
         run: cd personal-website && npm run build
 
+      - name: Copy build output to root
+        run: |
+          rm -rf *.html *.txt *.svg *.ico _next images 404
+          cp -r personal-website/out/* .
+          touch .nojekyll
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: personal-website/out
+          folder: .
           branch: gh-pages
           clean: true 

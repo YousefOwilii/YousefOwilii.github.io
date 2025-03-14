@@ -19,23 +19,20 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
-          cache-dependency-path: 'personal-website/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        run: cd personal-website && npm ci
+        run: npm ci
 
       - name: Build
-        run: cd personal-website && npm run build
+        run: npm run build
 
-      - name: Copy build output to root
-        run: |
-          rm -rf *.html *.txt *.svg *.ico _next images 404
-          cp -r personal-website/out/* .
-          touch .nojekyll
+      - name: Create .nojekyll file
+        run: touch .nojekyll
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: .
+          folder: out
           branch: gh-pages
           clean: true 

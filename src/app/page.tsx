@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -6,56 +9,84 @@ import ContactForm from "../components/ContactForm";
 import TypewriterEffect from "../components/TypewriterEffect";
 import StylizedQuote from "../components/StylizedQuote";
 
-// Project data
-const projects = [
-  {
-    title: "This website",
-    description: "This personal project showcases my skills in modern web development. Built with Next.js, TypeScript, and Tailwind CSS, it features a responsive design, dark mode, and interactive elements like the typewriter effect.",
-    technologies: ["Next.js", "TypeScript", "Tailwind CSS", "React"],
-    projectUrl: "https://yousefowili.me",
-    companyName: "Personal Project",
-    imageUrl: "/images/projects/portfolio.jpg",
-    companyLogo: "/images/projects/personal-logo.png",
-  },
-  {
-    title: "Copywriting Services",
-    description: "Worked with CopyLab to produce compelling copy for businesses and their websites. Created engaging content that drives conversions and improves brand messaging.",
-    technologies: ["Copywriting", "Content Strategy", "SEO", "Brand Messaging"],
-    projectUrl: "#",
-    companyName: "CopyLab",
-    imageUrl: "/images/projects/copylab.jpg",
-    companyLogo: "/images/projects/copylab-logo.png",
-  },
-  {
-    title: "AI Agents for Business",
-    description: "Working with ForceAI to streamline AI agents for businesses. Our latest work focuses on creating lead generation and outreach agents that automate customer acquisition processes.",
-    technologies: ["AI", "Python", "LangChain", "OpenAI API"],
-    projectUrl: "#",
-    companyName: "ForceAI",
-    imageUrl: "/images/projects/forceai.jpg",
-    companyLogo: "/images/projects/forceai-logo.png",
-  },
-  {
-    title: "Media Production",
-    description: "Collaborated with GMP (Generic Media Production) to produce video ads, restaurant menus, photo ad campaigns, and more. Created visually appealing content that effectively communicates brand messages.",
-    technologies: ["Video Production", "Graphic Design", "Photography", "Adobe Suite"],
-    projectUrl: "#",
-    companyName: "GMP",
-    imageUrl: "/images/projects/gmp.jpg",
-    companyLogo: "/images/projects/gmp-logo.png",
-  },
-  {
-    title: "Time Tracking App",
-    description: "Currently working with Ease to develop 'Time', a mobile app that helps users track and budget their time throughout the day. The app features intuitive UI/UX and powerful time management tools.",
-    technologies: ["SwiftUI", "iOS Development", "UI/UX Design", "Firebase"],
-    projectUrl: "#",
-    companyName: "Ease",
-    imageUrl: "/images/projects/ease.jpg",
-    companyLogo: "/images/projects/ease-logo.png",
-  },
-];
-
 export default function Home() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check if user has a preference stored
+    const isDark = localStorage.getItem("darkMode") === "true";
+    setIsDarkMode(isDark);
+
+    // Listen for theme changes
+    const handleThemeChange = () => {
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    };
+
+    // Set up a MutationObserver to watch for class changes on the html element
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "class") {
+          handleThemeChange();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Project data
+  const projects = [
+    {
+      title: "This website",
+      description: "This personal project showcases my skills in modern web development. Built with Next.js, TypeScript, and Tailwind CSS, it features a responsive design, dark mode, and interactive elements like the typewriter effect.",
+      technologies: ["Next.js", "TypeScript", "Tailwind CSS", "React"],
+      projectUrl: "https://yousefowili.me",
+      companyName: "Personal Project",
+      imageUrl: "/images/projects/portfolio.jpg",
+      companyLogo: isDarkMode ? "/images/projects/personal-logo.png" : "/images/projects/logo-light.png",
+    },
+    {
+      title: "Copywriting Services",
+      description: "Worked with CopyLab to produce compelling copy for businesses and their websites. Created engaging content that drives conversions and improves brand messaging.",
+      technologies: ["Copywriting", "Content Strategy", "SEO", "Brand Messaging"],
+      projectUrl: "#",
+      companyName: "CopyLab",
+      imageUrl: "/images/projects/copylab.jpg",
+      companyLogo: "/images/projects/copylab-logo.png",
+    },
+    {
+      title: "AI Agents for Business",
+      description: "Working with ForceAI to streamline AI agents for businesses. Our latest work focuses on creating lead generation and outreach agents that automate customer acquisition processes.",
+      technologies: ["AI", "Python", "LangChain", "OpenAI API"],
+      projectUrl: "#",
+      companyName: "ForceAI",
+      imageUrl: "/images/projects/forceai.jpg",
+      companyLogo: "/images/projects/forceai-logo.png",
+    },
+    {
+      title: "Media Production",
+      description: "Collaborated with GMP (Generic Media Production) to produce video ads, restaurant menus, photo ad campaigns, and more. Created visually appealing content that effectively communicates brand messages.",
+      technologies: ["Video Production", "Graphic Design", "Photography", "Adobe Suite"],
+      projectUrl: "#",
+      companyName: "GMP",
+      imageUrl: "/images/projects/gmp.jpg",
+      companyLogo: "/images/projects/gmp-logo.png",
+    },
+    {
+      title: "Time Tracking App",
+      description: "Currently working with Ease to develop 'Time', a mobile app that helps users track and budget their time throughout the day. The app features intuitive UI/UX and powerful time management tools.",
+      technologies: ["SwiftUI", "iOS Development", "UI/UX Design", "Firebase"],
+      projectUrl: "#",
+      companyName: "Ease",
+      imageUrl: "/images/projects/ease.jpg",
+      companyLogo: "/images/projects/ease-logo.png",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
       {/* Navigation */}

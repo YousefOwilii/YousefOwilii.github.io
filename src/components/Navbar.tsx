@@ -1,12 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check if user has a preference stored
+    const isDark = localStorage.getItem("darkMode") === "true";
+    setIsDarkMode(isDark);
+
+    // Listen for theme changes
+    const handleThemeChange = () => {
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    };
+
+    // Set up a MutationObserver to watch for class changes on the html element
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "class") {
+          handleThemeChange();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -18,7 +45,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center">
           <div className="relative w-8 h-8 mr-2">
             <Image 
-              src="/images/projects/personal-logo.png" 
+              src={isDarkMode ? "/images/projects/personal-logo.png" : "/images/projects/logo-light.png"} 
               alt="Yousef Owili" 
               width={32}
               height={32}

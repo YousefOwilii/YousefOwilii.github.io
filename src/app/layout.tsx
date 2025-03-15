@@ -18,6 +18,18 @@ export const metadata: Metadata = {
   keywords: ["developer", "portfolio", "web development", "full-stack", "Yousef Owili"],
   authors: [{ name: "Yousef Owili" }],
   creator: "Yousef Owili",
+  icons: {
+    icon: [
+      {
+        url: "/images/projects/logo-light.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/images/projects/personal-logo.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -27,9 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <head>
-        <link rel="icon" href="/images/projects/personal-logo.png" type="image/png" sizes="any" />
-      </head>
+      <head />
       <body
         className={`${inter.variable} ${robotoMono.variable} antialiased`}
       >

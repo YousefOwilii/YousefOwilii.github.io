@@ -1,38 +1,7 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function Footer() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    // Check if user has a preference stored
-    const isDark = localStorage.getItem("darkMode") === "true";
-    setIsDarkMode(isDark);
-
-    // Listen for theme changes
-    const handleThemeChange = () => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
-    };
-
-    // Set up a MutationObserver to watch for class changes on the html element
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === "class") {
-          handleThemeChange();
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
   return (
     <footer className="bg-gray-900 text-white py-12">
       <div className="container mx-auto px-6">
@@ -40,7 +9,7 @@ export default function Footer() {
           <Link href="/" className="flex items-center text-2xl font-bold mb-6 md:mb-0">
             <div className="relative w-8 h-8 mr-2">
               <Image 
-                src={isDarkMode ? "/images/projects/personal-logo.png" : "/images/projects/logo-light.png"} 
+                src="/images/projects/personal-logo.png" 
                 alt="Yousef Owili" 
                 fill 
                 className="object-contain"

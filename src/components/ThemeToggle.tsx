@@ -31,6 +31,14 @@ export default function ThemeToggle() {
     } else {
       document.documentElement.classList.remove("dark");
     }
+
+    // Dispatch a custom event to notify other components
+    window.dispatchEvent(new Event('storage'));
+    
+    // Force a re-render of components that depend on the theme
+    document.dispatchEvent(new CustomEvent('themeChanged', { 
+      detail: { isDarkMode: newDarkMode } 
+    }));
   };
 
   return (

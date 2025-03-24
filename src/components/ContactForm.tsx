@@ -18,6 +18,7 @@ export default function ContactForm() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const validateForm = () => {
     let valid = true;
@@ -77,11 +78,30 @@ export default function ContactForm() {
     
     setIsSubmitting(true);
     setSubmitStatus(null);
+    setErrorMessage("");
     
     try {
-      // In a real application, you would send the form data to your backend
-      // For now, we'll simulate a successful submission after a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use Formspree for form submission (works with static sites)
+      // Sign up at https://formspree.io and replace this with your actual form ID
+      const response = await fetch('https://formspree.io/f/mvgkrzyk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject || 'Contact Form Submission',
+          message: formData.message
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong. Please try again.');
+      }
       
       // Reset form after successful submission
       setFormData({
@@ -94,6 +114,8 @@ export default function ContactForm() {
       setSubmitStatus("success");
     } catch (error) {
       setSubmitStatus("error");
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+      console.error('Contact form submission error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -109,7 +131,7 @@ export default function ContactForm() {
       
       {submitStatus === "error" && (
         <div className="mb-6 p-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg">
-          There was an error sending your message. Please try again later.
+          {errorMessage || "There was an error sending your message. Please try again later."}
         </div>
       )}
       

@@ -82,7 +82,7 @@ export default function Home() {
       technologies: ["SwiftUI", "iOS Development", "UI/UX Design", "Firebase"],
       projectUrl: "#",
       companyName: "Ease",
-      imageUrl: "/images/projects/ease.jpg",
+      imageUrl: "/images/projects/portfolio.jpg",
       companyLogo: "/images/projects/Emblem.png",
     },
   ];

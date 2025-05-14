@@ -83,7 +83,7 @@ export default function Home() {
       projectUrl: "#",
       companyName: "Ease",
       imageUrl: "/images/projects/ease.jpg",
-      companyLogo: "/images/projects/ease-logo.png",
+      companyLogo: "/images/projects/Emblem.png",
     },
   ];
 

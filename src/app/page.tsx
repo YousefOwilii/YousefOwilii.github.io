@@ -8,6 +8,7 @@ import ProjectCard from "../components/ProjectCard";
 import ContactForm from "../components/ContactForm";
 import TypewriterEffect from "../components/TypewriterEffect";
 import StylizedQuote from "../components/StylizedQuote";
+import ChatWidget from "../components/ChatWidget";
 
 export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -91,6 +92,9 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
       {/* Navigation */}
       <Navbar />
+
+      {/* Chat Widget */}
+      <ChatWidget />
 
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-16 md:py-24">

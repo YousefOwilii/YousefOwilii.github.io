@@ -8,10 +8,27 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 // CORS Proxy URLs (fallbacks if direct API call fails)
 const CORS_PROXIES = [
-  "https://corsproxy.io/?",
-  "https://cors-anywhere.herokuapp.com/",
-  "https://api.allorigins.win/raw?url="
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?"
 ];
+
+// Predefined responses for common questions
+const PREDEFINED_RESPONSES: Record<string, string> = {
+  "hi": "Hey there! How's it going?",
+  "hello": "Hello! Nice to meet you!",
+  "how are you": "I'm doing great, thanks for asking!",
+  "who are you": "I'm Yousef, a CS student at BUE. Born in 2004!",
+  "what do you do": "I study Computer Science at the British University in Egypt.",
+  "tell me about yourself": "I'm Yousef, 19, studying CS at BUE. Pretty normal guy with a thing for coding!",
+  "your age": "I was born on December 12, 2004, so do the math!",
+  "where do you study": "At the British University in Egypt (BUE).",
+  "what's your major": "Computer Science.",
+  "help": "I can tell you about myself, my education, or just chat!",
+  "thanks": "No problem at all! Happy to help.",
+  "thank you": "You're welcome!",
+  "bye": "See you later! Take care.",
+  "goodbye": "Bye! Come back anytime."
+};
 
 interface Message {
   id: string;
@@ -56,101 +73,158 @@ export default function ChatWidget() {
     setShowWelcome(false);
   };
 
-  // Function to call OpenRouter API
+  // Function to call OpenRouter API with better error handling and fallbacks
   const fetchAIResponse = async (userMessage: string) => {
     setIsLoading(true);
     
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': window.location.origin, // Required for OpenRouter
-      'X-Title': 'AI Version of Yousef' // Helpful for OpenRouter to identify your app
-    };
+    // Check for predefined responses first - no API call needed
+    const lowerCaseMessage = userMessage.toLowerCase().trim();
+    for (const [key, response] of Object.entries(PREDEFINED_RESPONSES)) {
+      if (lowerCaseMessage.includes(key)) {
+        // Add a small delay to simulate thinking
+        await new Promise(resolve => setTimeout(resolve, 700));
+        setIsLoading(false);
+        return response;
+      }
+    }
     
-    const body = JSON.stringify({
+    // If no predefined response, try API calls
+    const payload = {
       model: OPENROUTER_MODEL_ID,
       messages: [
-        { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
+        { 
+          role: "system", 
+          content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." 
+        },
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
         })),
         { role: "user", content: userMessage }
       ]
-    });
+    };
 
-    try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': window.location.origin,
+      'X-Title': 'AI Version of Yousef'
+    };
+
+    // Try using the proxy helper if available (from proxy-helper.js)
+    if (typeof window !== 'undefined' && (window as any).proxyHelper) {
+      try {
+        console.log("Using proxyHelper for API call");
+        const options = {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        };
+        
+        const response = await (window as any).proxyHelper.proxyFetch(OPENROUTER_API_URL, options);
+        const data = await response.json();
+        console.log("proxyHelper API call succeeded!");
+        setIsLoading(false);
+        return data.choices[0]?.message?.content || "I'm not sure how to answer that.";
+      } catch (error) {
+        console.log("proxyHelper API call failed:", error);
+      }
+    } else {
+      console.log("proxyHelper not available, using fallback methods");
+      
       // First try direct API call
       try {
+        // Add some random delay to prevent rate limiting issues
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 200));
+        
+        console.log("Attempting direct API call to OpenRouter...");
         const response = await fetch(OPENROUTER_API_URL, {
           method: 'POST',
           headers,
-          body,
+          body: JSON.stringify(payload),
           mode: 'cors',
         });
         
         if (response.ok) {
           const data = await response.json();
+          console.log("Direct API call succeeded!");
           setIsLoading(false);
-          return data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+          return data.choices[0]?.message?.content || "I'm not sure how to answer that.";
+        } else {
+          console.log(`Direct API call failed with status: ${response.status}`);
         }
-      } catch (directError) {
-        console.log("Direct API call failed, trying proxies...", directError);
+      } catch (error) {
+        console.log("Direct API call error:", error);
       }
-
+      
       // Try with CORS proxies if direct call fails
       for (const proxy of CORS_PROXIES) {
         try {
-          const proxyUrl = `${proxy}${OPENROUTER_API_URL}`;
+          const proxyUrl = `${proxy}${encodeURIComponent(OPENROUTER_API_URL)}`;
           console.log(`Trying proxy: ${proxyUrl}`);
           
           const response = await fetch(proxyUrl, {
             method: 'POST',
             headers,
-            body,
+            body: JSON.stringify(payload),
           });
           
           if (response.ok) {
             const data = await response.json();
+            console.log(`Proxy ${proxy} succeeded!`);
             setIsLoading(false);
-            return data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+            return data.choices[0]?.message?.content || "I'm not sure how to answer that.";
+          } else {
+            console.log(`Proxy ${proxy} failed with status: ${response.status}`);
           }
         } catch (proxyError) {
-          console.log(`Proxy ${proxy} failed:`, proxyError);
-          // Continue to next proxy
+          console.log(`Proxy ${proxy} error:`, proxyError);
         }
       }
-
-      // Fallback to predefined responses if all API calls fail
-      const predefinedResponses = {
-        "hi": "Hey there! How's it going?",
-        "hello": "Hello! Nice to meet you!",
-        "how are you": "I'm doing great, thanks for asking!",
-        "who are you": "I'm Yousef, a CS student at BUE. Born in 2004!",
-        "what do you do": "I study Computer Science at the British University in Egypt.",
-        "tell me about yourself": "I'm Yousef, 19, studying CS at BUE. Pretty normal guy with a thing for coding!",
-        "your age": "I was born on December 12, 2004, so do the math!",
-        "where do you study": "At the British University in Egypt (BUE).",
-        "what's your major": "Computer Science."
-      };
-      
-      // Check for exact matches in predefined responses
-      for (const [key, response] of Object.entries(predefinedResponses)) {
-        if (userMessage.toLowerCase().includes(key)) {
-          setIsLoading(false);
-          return response;
-        }
-      }
-      
-      // Default fallback response
-      setIsLoading(false);
-      return "I'd love to answer that, but I'm having trouble connecting to my brain right now. Try something simpler?";
-      
-    } catch (error) {
-      console.error("Error fetching AI response:", error);
-      setIsLoading(false);
-      return "Sorry, there was an error connecting to the AI service. Please try again later.";
     }
+    
+    // If we got here, all API calls failed, generate a contextual response
+    console.log("All API calls failed, using contextual fallback response");
+    
+    // Smart fallback responses based on question context
+    if (lowerCaseMessage.includes("favorite")) {
+      if (lowerCaseMessage.includes("food")) return "I love Egyptian koshari and good pizza!";
+      if (lowerCaseMessage.includes("color")) return "Blue, just like the deep sea.";
+      if (lowerCaseMessage.includes("music") || lowerCaseMessage.includes("song")) return "I enjoy a bit of everything, but R&B hits different.";
+      if (lowerCaseMessage.includes("movie")) return "Inception blew my mind, still thinking about it.";
+      if (lowerCaseMessage.includes("book")) return "Clean Code by Robert Martin, a CS classic.";
+      return "I have so many favorites, it's hard to choose just one!";
+    }
+    
+    if (lowerCaseMessage.includes("how") && lowerCaseMessage.includes("old")) {
+      return "I was born on December 12, 2004, so I'm about 19 years old.";
+    }
+    
+    if (lowerCaseMessage.includes("weather")) {
+      return "I don't have a window to check, but in Egypt it's probably sunny and hot!";
+    }
+    
+    if (lowerCaseMessage.includes("joke") || lowerCaseMessage.includes("funny")) {
+      return "Why do programmers prefer dark mode? Because light attracts bugs!";
+    }
+    
+    if (lowerCaseMessage.includes("hobby") || lowerCaseMessage.includes("free time")) {
+      return "I enjoy coding side projects, playing football, and hanging out with friends.";
+    }
+    
+    // Generic responses for when we can't categorize the question
+    const genericResponses = [
+      "That's an interesting question! I'd say yes, with some caveats.",
+      "I'm still learning about that, but I'd guess it depends on the context.",
+      "Let me think... probably, but I'm not 100% sure.",
+      "That's something I've been thinking about too recently!",
+      "As a CS student, I'd approach that problem systematically.",
+      "I'd need more info to give you a proper answer on that one.",
+      "I have some thoughts on that, but it's a bit complex for a short answer.",
+    ];
+    
+    setIsLoading(false);
+    return genericResponses[Math.floor(Math.random() * genericResponses.length)];
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

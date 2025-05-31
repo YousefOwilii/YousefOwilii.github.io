@@ -6,20 +6,6 @@ const OPENROUTER_API_KEY = "sk-or-v1-d82c48c766ba2b37a69dc9455d2de86052a493656fe
 const OPENROUTER_MODEL_ID = "deepseek/deepseek-r1-0528:free"; // Replace with your chosen model ID
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// Mock responses for fallback when API doesn't work
-const MOCK_RESPONSES = [
-  "I'm just an AI, but I'll do my best to help!",
-  "That's an interesting question, let me think...",
-  "As a CS student, I'd approach that problem differently.",
-  "Born in 2004, so I'm still learning about that!",
-  "Let me keep it brief - that's a great point.",
-  "I study at BUE and that's definitely in my field.",
-  "Hmm, that's a tricky one, but I'll try to answer.",
-  "As the AI version of Yousef, I'd say go for it!",
-  "That's exactly what I've been thinking about lately.",
-  "Great question, though I'm still processing my thoughts on that."
-];
-
 interface Message {
   id: string;
   content: string;
@@ -34,7 +20,6 @@ export default function ChatWidget() {
   const [inputValue, setInputValue] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [useApiMode, setUseApiMode] = useState(true); // Toggle between API and fallback mode
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -43,31 +28,6 @@ export default function ChatWidget() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-
-  // Try a test API call when component mounts to see if API works
-  useEffect(() => {
-    const testApiConnection = async () => {
-      try {
-        const response = await fetch(OPENROUTER_API_URL, {
-          method: 'HEAD',
-          headers: {
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          }
-        });
-        
-        // If we can't connect, switch to fallback mode
-        if (!response.ok) {
-          console.log("API test failed, switching to fallback mode");
-          setUseApiMode(false);
-        }
-      } catch (error) {
-        console.log("API test failed with error, switching to fallback mode", error);
-        setUseApiMode(false);
-      }
-    };
-    
-    testApiConnection();
-  }, []);
 
   const toggleChat = () => {
     setIsAnimating(true);
@@ -89,69 +49,43 @@ export default function ChatWidget() {
     setShowWelcome(false);
   };
 
-  // Helper function to generate a mock response
-  const generateMockResponse = (userMessage: string) => {
-    // Use the user message to deterministically select a response (but still seems random)
-    const index = userMessage.length % MOCK_RESPONSES.length;
-    return `${userMessage.length % 2 === 0 ? "👨‍💻 " : ""}${MOCK_RESPONSES[index]}`;
-  };
-
-  // Function to call OpenRouter API or fallback to mock responses
+  // Function to call OpenRouter API
   const fetchAIResponse = async (userMessage: string) => {
     setIsLoading(true);
     
-    // If we're in fallback mode, just return a mock response
-    if (!useApiMode) {
-      // Add a delay to simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setIsLoading(false);
-      return generateMockResponse(userMessage);
-    }
-    
     try {
-      // Create message array
-      const messageArray = [
-        { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
-        ...messages.map(msg => ({
-          role: msg.sender === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        })),
-        { role: "user", content: userMessage }
-      ];
-      
-      // Try direct API connection
       const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'AI Version of Yousef'
+          'HTTP-Referer': window.location.origin, // Required for OpenRouter
+          'X-Title': 'AI Version of Yousef' // Helpful for OpenRouter to identify your app
         },
         body: JSON.stringify({
           model: OPENROUTER_MODEL_ID,
-          messages: messageArray
+          messages: [
+            { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
+            ...messages.map(msg => ({
+              role: msg.sender === 'user' ? 'user' : 'assistant',
+              content: msg.content
+            })),
+            { role: "user", content: userMessage }
+          ]
         }),
       });
       
       if (!response.ok) {
-        console.warn("API response not OK, falling back to mock mode");
-        setUseApiMode(false); // Switch to fallback mode for future responses
         throw new Error(`Error: ${response.status}`);
       }
       
       const data = await response.json();
-      const aiResponseContent = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that request.";
+      const aiResponseContent = data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
       
       return aiResponseContent;
     } catch (error) {
       console.error("Error fetching AI response:", error);
-      
-      // Switch to fallback mode for future responses
-      setUseApiMode(false);
-      
-      // Return a mock response when API fails
-      return generateMockResponse(userMessage);
+      return "Sorry, there was an error connecting to the AI service. Please try again later.";
     } finally {
       setIsLoading(false);
     }
@@ -215,4 +149,115 @@ export default function ChatWidget() {
         ref={chatContainerRef}
         className={`absolute bottom-16 right-0 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden transition-all duration-500 ${
           isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4 pointer-events-none'
-        }`
+        }`}
+        style={{ height: isOpen ? '500px' : '0', maxHeight: '80vh' }}
+      >
+        {/* Welcome overlay with blur effect */}
+        {showWelcome && (
+          <div className="absolute inset-0 z-10 backdrop-blur-sm bg-black/30 flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg max-w-xs transform transition-all duration-500 animate-fade-in-up">
+              <h3 className="text-xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">Welcome!</h3>
+              <p className="mb-4 text-gray-700 dark:text-gray-300">
+                You're now chatting with the AI version of me. Feel free to ask anything!
+              </p>
+              <button
+                onClick={dismissWelcome}
+                className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+              >
+                Let's Chat
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Chat header */}
+        <div className="bg-indigo-600 text-white p-4 flex items-center">
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-3 shadow-md">
+            <span className="text-indigo-600 font-bold text-sm">AI</span>
+          </div>
+          <div>
+            <h3 className="font-medium">AI Assistant</h3>
+            <p className="text-xs opacity-75">AI version of Yousef</p>
+          </div>
+        </div>
+
+        {/* Messages container */}
+        <div className="flex-1 p-4 overflow-y-auto" style={{ height: 'calc(500px - 132px)' }}>
+          {messages.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-center text-gray-500 dark:text-gray-400">
+              <div className="animate-fade-in-up">
+                <p>No messages yet.</p>
+                <p className="text-sm">Start a conversation!</p>
+              </div>
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div
+                key={message.id}
+                className={`mb-4 ${
+                  message.sender === 'user' ? 'text-right' : ''
+                } animate-fade-in-up`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div
+                  className={`inline-block p-3 rounded-lg max-w-[80%] ${
+                    message.sender === 'user'
+                      ? 'bg-indigo-600 text-white rounded-br-none'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none'
+                  }`}
+                >
+                  {message.content}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            ))
+          )}
+          {isLoading && (
+            <div className="flex items-center mb-4 animate-fade-in-up">
+              <div className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-3 rounded-lg rounded-bl-none max-w-[80%] inline-block">
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: '600ms' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input area */}
+        <form onSubmit={handleSubmit} className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={isLoading ? "AI is thinking..." : "Type a message..."}
+              className="flex-1 px-4 py-2 bg-transparent focus:outline-none text-gray-700 dark:text-gray-300"
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              className="bg-indigo-600 text-white px-4 py-2 flex items-center justify-center hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!inputValue.trim() || isLoading}
+            >
+              {isLoading ? (
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+} 

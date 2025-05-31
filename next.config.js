@@ -11,8 +11,7 @@ const nextConfig = {
       },
     ],
   },
-  // Remove the static export configuration to enable API routes
-  // output: 'export',
+  output: 'export',
   // For username.github.io repositories, both basePath and assetPrefix should be empty strings
   basePath: '',
   assetPrefix: '',

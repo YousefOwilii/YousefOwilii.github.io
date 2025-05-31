@@ -1,0 +1,1 @@
+// Add the SPA GitHub Pages redirect script before the main app code 

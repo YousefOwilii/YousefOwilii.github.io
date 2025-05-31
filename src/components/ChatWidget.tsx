@@ -5,10 +5,11 @@ import Image from 'next/image';
 const OPENROUTER_API_KEY = "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"; // Replace with your OpenRouter API key
 const OPENROUTER_MODEL_ID = "deepseek/deepseek-r1-0528:free"; // Replace with your chosen model ID
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-// Array of CORS proxies to try if direct connection fails
+
+// CORS Proxy URLs (fallbacks if direct API call fails)
 const CORS_PROXIES = [
-  "https://cors-router.onrender.com/proxy/",
   "https://corsproxy.io/?",
+  "https://cors-anywhere.herokuapp.com/",
   "https://api.allorigins.win/raw?url="
 ];
 
@@ -26,7 +27,6 @@ export default function ChatWidget() {
   const [inputValue, setInputValue] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentProxyIndex, setCurrentProxyIndex] = useState(-1); // -1 means direct connection
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -60,93 +60,96 @@ export default function ChatWidget() {
   const fetchAIResponse = async (userMessage: string) => {
     setIsLoading(true);
     
-    try {
-      const messageArray = [
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': window.location.origin, // Required for OpenRouter
+      'X-Title': 'AI Version of Yousef' // Helpful for OpenRouter to identify your app
+    };
+    
+    const body = JSON.stringify({
+      model: OPENROUTER_MODEL_ID,
+      messages: [
         { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
         ...messages.map(msg => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
         })),
         { role: "user", content: userMessage }
-      ];
-      
-      const requestData = {
-        model: OPENROUTER_MODEL_ID,
-        messages: messageArray
-      };
-      
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://yousefowili.me',
-        'X-Title': 'AI Version of Yousef'
-      };
-      
-      let response;
-      let url = OPENROUTER_API_URL;
-      
-      // Try direct connection first if we haven't determined a working proxy yet
-      if (currentProxyIndex === -1) {
-        try {
-          response = await fetch(url, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(requestData)
-          });
-          
-          if (!response.ok) {
-            throw new Error("Direct connection failed");
-          }
-        } catch (error) {
-          console.log("Direct connection failed, trying proxies", error);
-          // If direct connection fails, try the first proxy
-          setCurrentProxyIndex(0);
-          throw new Error("Switching to proxy");
-        }
-      }
-      
-      // If we're using a proxy (or direct connection failed)
-      if (currentProxyIndex >= 0) {
-        const proxy = CORS_PROXIES[currentProxyIndex];
-        url = proxy + encodeURIComponent(OPENROUTER_API_URL);
-        
-        response = await fetch(url, {
+      ]
+    });
+
+    try {
+      // First try direct API call
+      try {
+        const response = await fetch(OPENROUTER_API_URL, {
           method: 'POST',
-          headers: headers,
-          body: JSON.stringify(requestData)
+          headers,
+          body,
+          mode: 'cors',
         });
         
-        if (!response.ok && currentProxyIndex < CORS_PROXIES.length - 1) {
-          // If this proxy fails, try the next one
-          setCurrentProxyIndex(currentProxyIndex + 1);
-          throw new Error(`Proxy ${currentProxyIndex} failed, trying next`);
+        if (response.ok) {
+          const data = await response.json();
+          setIsLoading(false);
+          return data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+        }
+      } catch (directError) {
+        console.log("Direct API call failed, trying proxies...", directError);
+      }
+
+      // Try with CORS proxies if direct call fails
+      for (const proxy of CORS_PROXIES) {
+        try {
+          const proxyUrl = `${proxy}${OPENROUTER_API_URL}`;
+          console.log(`Trying proxy: ${proxyUrl}`);
+          
+          const response = await fetch(proxyUrl, {
+            method: 'POST',
+            headers,
+            body,
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setIsLoading(false);
+            return data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+          }
+        } catch (proxyError) {
+          console.log(`Proxy ${proxy} failed:`, proxyError);
+          // Continue to next proxy
+        }
+      }
+
+      // Fallback to predefined responses if all API calls fail
+      const predefinedResponses = {
+        "hi": "Hey there! How's it going?",
+        "hello": "Hello! Nice to meet you!",
+        "how are you": "I'm doing great, thanks for asking!",
+        "who are you": "I'm Yousef, a CS student at BUE. Born in 2004!",
+        "what do you do": "I study Computer Science at the British University in Egypt.",
+        "tell me about yourself": "I'm Yousef, 19, studying CS at BUE. Pretty normal guy with a thing for coding!",
+        "your age": "I was born on December 12, 2004, so do the math!",
+        "where do you study": "At the British University in Egypt (BUE).",
+        "what's your major": "Computer Science."
+      };
+      
+      // Check for exact matches in predefined responses
+      for (const [key, response] of Object.entries(predefinedResponses)) {
+        if (userMessage.toLowerCase().includes(key)) {
+          setIsLoading(false);
+          return response;
         }
       }
       
-      if (!response!.ok) {
-        throw new Error(`Error: ${response!.status}`);
-      }
+      // Default fallback response
+      setIsLoading(false);
+      return "I'd love to answer that, but I'm having trouble connecting to my brain right now. Try something simpler?";
       
-      const data = await response!.json();
-      const aiResponseContent = data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
-      
-      return aiResponseContent;
     } catch (error) {
       console.error("Error fetching AI response:", error);
-      
-      // If we've tried all proxies and they all failed, return an error message
-      if (currentProxyIndex >= CORS_PROXIES.length - 1) {
-        return "Sorry, there was an error connecting to the AI service. Please try again later.";
-      }
-      
-      // If we're switching proxies, retry the request
-      if (error instanceof Error && error.message.includes("trying next")) {
-        return fetchAIResponse(userMessage);
-      }
-      
-      return "Sorry, there was an error connecting to the AI service. Please try again later.";
-    } finally {
       setIsLoading(false);
+      return "Sorry, there was an error connecting to the AI service. Please try again later.";
     }
   };
 

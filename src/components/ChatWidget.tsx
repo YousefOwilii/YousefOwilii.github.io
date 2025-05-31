@@ -1,11 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
-// Configuration - You'll need to add your OpenRouter API key and model ID here
-const OPENROUTER_API_KEY = "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"; // Replace with your OpenRouter API key
-const OPENROUTER_MODEL_ID = "deepseek/deepseek-r1-0528:free"; // Replace with your chosen model ID
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-
+// No need for OpenRouter credentials here anymore as they're in the API route
 interface Message {
   id: string;
   content: string;
@@ -49,43 +45,51 @@ export default function ChatWidget() {
     setShowWelcome(false);
   };
 
-  // Function to call OpenRouter API
+  // Function to call our API route instead of OpenRouter directly
   const fetchAIResponse = async (userMessage: string) => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(OPENROUTER_API_URL, {
+      // Create the message array for the API
+      const messageArray = [
+        { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
+        ...messages.map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        })),
+        { role: "user", content: userMessage }
+      ];
+      
+      // Call our own API route instead of OpenRouter directly
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': window.location.origin, // Required for OpenRouter
-          'X-Title': 'AI Version of Yousef' // Helpful for OpenRouter to identify your app
         },
         body: JSON.stringify({
-          model: OPENROUTER_MODEL_ID,
-          messages: [
-            { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
-            ...messages.map(msg => ({
-              role: msg.sender === 'user' ? 'user' : 'assistant',
-              content: msg.content
-            })),
-            { role: "user", content: userMessage }
-          ]
+          messages: messageArray
         }),
       });
       
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        const errorText = await response.text();
+        console.error("API response error:", errorText);
+        throw new Error(`Error: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
-      const aiResponseContent = data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+      const aiResponseContent = data.choices?.[0]?.message?.content || "Sorry, I couldn't process that request.";
       
       return aiResponseContent;
     } catch (error) {
       console.error("Error fetching AI response:", error);
-      return "Sorry, there was an error connecting to the AI service. Please try again later.";
+      
+      // More informative error message based on the error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        return "Network error. Please check your internet connection and try again.";
+      } else {
+        return "Sorry, there was an error connecting to the AI service. Please try again later.";
+      }
     } finally {
       setIsLoading(false);
     }

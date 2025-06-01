@@ -1,44 +1,42 @@
 # Deployment Guide
 
-This project can be deployed in two ways:
+This project can now be deployed directly to GitHub Pages without the need for a separate API server.
 
-## 1. GitHub Pages Deployment (Static, without AI chat functionality)
+## GitHub Pages Deployment
 
-GitHub Pages only supports static websites, so the AI chat functionality won't work directly.
+1. Push your code to GitHub
+2. Set up GitHub Pages deployment for your repository
+3. The chat widget should work correctly without any additional configuration
 
-1. Make sure your `next.config.js` is set up for static export (with `output: 'export'`)
-2. Build your project: `npm run build`
-3. Deploy to GitHub Pages
+## What's Changed
 
-## 2. Vercel Deployment (With API routes for AI chat)
+We've simplified the approach to directly use the OpenRouter API with their free model tier:
 
-For full functionality including the AI chat:
-
-1. Fork/push this repository to GitHub
-2. Sign up for Vercel (https://vercel.com)
-3. Connect your GitHub repository to Vercel
-4. Set the following environment variables in Vercel:
-   - `OPENROUTER_API_KEY`: Your OpenRouter API key
-5. Deploy your project
-
-## 3. Hybrid Approach (Recommended)
-
-Use both GitHub Pages for the main site and Vercel for the API:
-
-1. Deploy the API part to Vercel
-2. Update the API endpoint URL in `src/components/ChatWidget.tsx` to point to your Vercel deployment:
-   ```javascript
-   apiResponse = await fetch("https://your-vercel-deployment-url.vercel.app/api/chat", {
-   ```
-3. Deploy the static part to GitHub Pages
+1. The chat widget now makes direct API calls to OpenRouter
+2. We're using the "deepseek/deepseek-r1:free" model which is available for free use
+3. No need for a separate server to hide API keys
 
 ## Troubleshooting
 
 If the chat functionality isn't working:
 
 1. Check browser console for errors
-2. Verify your API key is correctly set in Vercel environment variables
-3. Make sure the API endpoint URL is correct in your code
-4. Check if CORS is properly configured (may need to add your GitHub Pages domain to allowed origins)
+2. Make sure the API key in the code is still valid
+3. Verify that the OpenRouter API is accessible and the free tier is still available
+4. Check if you've exceeded the rate limits for free models (50 requests per day for free users)
 
-The code has a fallback mechanism that will try to use a direct API call if the Vercel endpoint fails, but this is not recommended for production as it exposes your API key. 
+## Getting Your Own API Key
+
+For production use, you should get your own OpenRouter API key:
+
+1. Create an account at https://openrouter.ai/
+2. Click on "Keys" in the dashboard
+3. Click "Create Key" and give it a name
+4. Copy your API key and replace it in the code
+
+## Rate Limits
+
+Free model variants (with IDs ending in `:free`) are limited to:
+- 20 requests per minute
+- 50 requests per day for free accounts
+- 1000 requests per day for accounts that have purchased at least 10 credits 

@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 // Configuration - You'll need to add your OpenRouter API key and model ID here
-const OPENROUTER_API_KEY = "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"; // Replace with your OpenRouter API key
-const OPENROUTER_MODEL_ID = "deepseek/deepseek-r1-0528:free"; // Replace with your chosen model ID
+const OPENROUTER_API_KEY = "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"; // Get a new API key from https://openrouter.ai/
+const OPENROUTER_MODEL_ID = "anthropic/claude-3-haiku:free"; // Using a different free model
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 interface Message {
@@ -54,16 +54,13 @@ export default function ChatWidget() {
     setIsLoading(true);
     
     try {
-      console.log("Making direct API call to OpenRouter");
-      
-      // Create API request configuration
-      const requestOptions = {
+      const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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',
-          'HTTP-Referer': 'https://yousef-owilii-github-io.vercel.app',
-          'X-Title': 'AI Version of Yousef'
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '', // Required for OpenRouter
+          'X-Title': 'AI Version of Yousef' // Helpful for OpenRouter to identify your app
         },
         body: JSON.stringify({
           model: OPENROUTER_MODEL_ID,
@@ -75,36 +72,16 @@ export default function ChatWidget() {
             })),
             { role: "user", content: userMessage }
           ]
-        })
-      };
-      
-      console.log("Request headers:", Object.keys(requestOptions.headers).join(', '));
-      
-      // Send request
-      const response = await fetch(OPENROUTER_API_URL, requestOptions);
-      
-      console.log("OpenRouter API response status:", response.status);
+        }),
+      });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API error:", response.status, errorText);
-        throw new Error(`API error: ${response.status} - ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(`API error: ${response.status} - ${JSON.stringify(errorData)}`);
       }
       
       const data = await response.json();
-      console.log("API response data:", data);
-      
-      // Handle response format
-      let aiResponseContent;
-      
-      if (data.choices && data.choices[0]?.message?.content) {
-        // This is a direct response from OpenRouter API
-        aiResponseContent = data.choices[0].message.content;
-      } else {
-        // Fallback message if we can't parse the response
-        console.warn("Couldn't parse API response:", data);
-        aiResponseContent = "Sorry, I couldn't process that request.";
-      }
+      const aiResponseContent = data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
       
       return aiResponseContent;
     } catch (error) {

@@ -6,10 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "build:github": "next build",
-    "build:vercel": "cp next.config.vercel.js next.config.js && next build",
-    "dev:vercel": "cp next.config.vercel.js next.config.js && next dev"
+    "lint": "next lint"
   },
   "dependencies": {
     "next": "14.0.4",

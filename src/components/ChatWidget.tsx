@@ -57,28 +57,69 @@ export default function ChatWidget() {
       // But for local development, we can still use direct API call
       const isProduction = window.location.hostname !== 'localhost';
       
+      console.log("Environment:", isProduction ? "Production" : "Development");
+      console.log("API endpoint:", isProduction ? 
+        "https://yousef-owilii-github-1jx5bg1dn-yousefowilis-projects.vercel.app/api/chat" : 
+        OPENROUTER_API_URL);
+      
       let apiResponse;
       
       if (isProduction) {
         // Use a proxy service like Netlify Functions, Vercel Edge Functions, or a third-party API proxy
-        // For demonstration, we'll assume you'll set up a proxy endpoint
-        apiResponse = await fetch("https://crudl-five.vercel.app/api/chat", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messages: [
-              { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
-              ...messages.map(msg => ({
-                role: msg.sender === 'user' ? 'user' : 'assistant',
-                content: msg.content
-              })),
-              { role: "user", content: userMessage }
-            ],
-            model: OPENROUTER_MODEL_ID
-          }),
-        });
+        try {
+          apiResponse = await fetch("https://yousef-owilii-github-1jx5bg1dn-yousefowilis-projects.vercel.app/api/chat", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messages: [
+                { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
+                ...messages.map(msg => ({
+                  role: msg.sender === 'user' ? 'user' : 'assistant',
+                  content: msg.content
+                })),
+                { role: "user", content: userMessage }
+              ],
+              model: OPENROUTER_MODEL_ID
+            }),
+          });
+          console.log("API response status:", apiResponse.status);
+          
+          if (!apiResponse.ok) {
+            console.log("API endpoint failed, trying direct API call as fallback");
+            throw new Error("API endpoint failed");
+          }
+        } catch (fetchError) {
+          console.error("Fetch error:", fetchError);
+          
+          // Fallback to direct API call if the Vercel endpoint fails
+          console.log("Attempting direct API call as fallback");
+          const apiKey = "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";
+          
+          apiResponse = await fetch(OPENROUTER_API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+              'HTTP-Referer': window.location.origin,
+              'X-Title': 'AI Version of Yousef'
+            },
+            body: JSON.stringify({
+              model: OPENROUTER_MODEL_ID,
+              messages: [
+                { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
+                ...messages.map(msg => ({
+                  role: msg.sender === 'user' ? 'user' : 'assistant',
+                  content: msg.content
+                })),
+                { role: "user", content: userMessage }
+              ]
+            }),
+          });
+          
+          console.log("Fallback API status:", apiResponse.status);
+        }
       } else {
         // For local development, use direct API call
         // Retrieve API key from environment variables (you'll need to set this up in your local dev environment)
@@ -111,9 +152,21 @@ export default function ChatWidget() {
       }
       
       const data = await apiResponse.json();
-      const aiResponseContent = isProduction ? 
-        data.response : 
-        data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+      console.log("API response data:", data);
+      
+      // Handle both direct API and proxy API response formats
+      let aiResponseContent;
+      
+      if (data.response) {
+        // This is the response from our Vercel API
+        aiResponseContent = data.response;
+      } else if (data.choices && data.choices[0]?.message?.content) {
+        // This is a direct response from OpenRouter API
+        aiResponseContent = data.choices[0].message.content;
+      } else {
+        // Fallback message if we can't parse the response
+        aiResponseContent = "Sorry, I couldn't process that request.";
+      }
       
       return aiResponseContent;
     } catch (error) {

@@ -58,20 +58,25 @@ export default function ChatWidget() {
       const isProduction = window.location.hostname !== 'localhost';
       
       console.log("Environment:", isProduction ? "Production" : "Development");
-      console.log("API endpoint:", isProduction ? 
-        "https://yousef-owilii-github-1jx5bg1dn-yousefowilis-projects.vercel.app/api/chat" : 
-        OPENROUTER_API_URL);
+      
+      // Determine the correct API URL
+      const vercelDeploymentUrl = "https://yousef-owilii-github-1jx5bg1dn-yousefowilis-projects.vercel.app";
+      const apiEndpoint = `${vercelDeploymentUrl}/api/chat`;
+      
+      console.log("API endpoint:", isProduction ? apiEndpoint : OPENROUTER_API_URL);
       
       let apiResponse;
       
       if (isProduction) {
         // Use a proxy service like Netlify Functions, Vercel Edge Functions, or a third-party API proxy
         try {
-          apiResponse = await fetch("https://yousef-owilii-github-1jx5bg1dn-yousefowilis-projects.vercel.app/api/chat", {
+          apiResponse = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Origin': window.location.origin
             },
+            mode: 'cors', // Explicitly set CORS mode
             body: JSON.stringify({
               messages: [
                 { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
@@ -97,28 +102,41 @@ export default function ChatWidget() {
           console.log("Attempting direct API call as fallback");
           const apiKey = "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";
           
-          apiResponse = await fetch(OPENROUTER_API_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`,
-              'HTTP-Referer': window.location.origin,
-              'X-Title': 'AI Version of Yousef'
-            },
-            body: JSON.stringify({
-              model: OPENROUTER_MODEL_ID,
-              messages: [
-                { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
-                ...messages.map(msg => ({
-                  role: msg.sender === 'user' ? 'user' : 'assistant',
-                  content: msg.content
-                })),
-                { role: "user", content: userMessage }
-              ]
-            }),
-          });
+          // Make sure we're using the correct HTTP-Referer header
+          const referer = window.location.origin;
+          console.log("Using referer:", referer);
           
-          console.log("Fallback API status:", apiResponse.status);
+          try {
+            apiResponse = await fetch(OPENROUTER_API_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+                'HTTP-Referer': referer,
+                'X-Title': 'AI Version of Yousef'
+              },
+              body: JSON.stringify({
+                model: OPENROUTER_MODEL_ID,
+                messages: [
+                  { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
+                  ...messages.map(msg => ({
+                    role: msg.sender === 'user' ? 'user' : 'assistant',
+                    content: msg.content
+                  })),
+                  { role: "user", content: userMessage }
+                ]
+              }),
+            });
+            
+            console.log("Fallback API status:", apiResponse.status);
+            
+            if (!apiResponse.ok) {
+              throw new Error(`Fallback API failed with status: ${apiResponse.status}`);
+            }
+          } catch (fallbackError) {
+            console.error("Fallback API also failed:", fallbackError);
+            throw fallbackError; // Re-throw to be caught by the outer catch block
+          }
         }
       } else {
         // For local development, use direct API call
@@ -163,8 +181,13 @@ export default function ChatWidget() {
       } else if (data.choices && data.choices[0]?.message?.content) {
         // This is a direct response from OpenRouter API
         aiResponseContent = data.choices[0].message.content;
+      } else if (data.error) {
+        // This is an error response
+        console.error("API returned an error:", data.error);
+        throw new Error(data.message || data.error);
       } else {
         // Fallback message if we can't parse the response
+        console.warn("Couldn't parse API response:", data);
         aiResponseContent = "Sorry, I couldn't process that request.";
       }
       

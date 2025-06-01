@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 // Configuration - Using environment variables instead of hardcoded API key
-const OPENROUTER_MODEL_ID = "deepseek/deepseek-r1:free"; // Use the free model
+const OPENROUTER_MODEL_ID = "openai/gpt-3.5-turbo"; // Use a reliable model
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 interface Message {
@@ -57,20 +57,25 @@ export default function ChatWidget() {
       
       // Use a new API key - the one from the tutorial on OpenRouter's site
       // You should get your own key from https://openrouter.ai/
-      const apiKey = "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";
+      const apiKey = "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";
       
       // For GitHub Pages deployment
       const referer = "https://yousef-owilii-github-io.vercel.app";
       console.log("Using referer:", referer);
       
+      // Make sure the Authorization header is properly formatted
+      // OpenRouter requires 'Bearer ' followed by the API key
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      headers.append('Authorization', `Bearer ${apiKey}`);
+      headers.append('HTTP-Referer', referer);
+      headers.append('X-Title', 'AI Version of Yousef');
+      
+      console.log("Request headers:", [...headers.entries()].map(([key]) => key).join(', '));
+      
       const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': referer,
-          'X-Title': 'AI Version of Yousef'
-        },
+        headers: headers,
         body: JSON.stringify({
           model: OPENROUTER_MODEL_ID,
           messages: [
@@ -88,8 +93,21 @@ export default function ChatWidget() {
       console.log("OpenRouter API response status:", response.status);
       
       if (!response.ok) {
-        let errorText = await response.text();
-        console.error("API error:", response.status, errorText);
+        let errorText = "";
+        try {
+          errorText = await response.text();
+          console.error("API error details:", response.status, errorText);
+          
+          // Try to parse the error as JSON for more details
+          try {
+            const errorJson = JSON.parse(errorText);
+            console.error("Parsed error:", errorJson);
+          } catch (parseError) {
+            console.error("Could not parse error response as JSON");
+          }
+        } catch (e) {
+          console.error("Could not read error response text");
+        }
         throw new Error(`API error: ${response.status} - ${errorText}`);
       }
       

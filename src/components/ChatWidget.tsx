@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 // Configuration - You'll need to add your OpenRouter API key and model ID here
-const OPENROUTER_API_KEY = "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"; // Get a new API key from https://openrouter.ai/
-const OPENROUTER_MODEL_ID = "anthropic/claude-3-haiku:free"; // Using a different free model
+const OPENROUTER_API_KEY = "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"; // OpenRouter API key
+const OPENROUTER_MODEL_ID = "anthropic/claude-3-haiku:free"; // Using a free model
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 interface Message {
@@ -49,41 +49,99 @@ export default function ChatWidget() {
     setShowWelcome(false);
   };
 
+  // Function to validate OpenRouter API key
+  const validateApiKey = async () => {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/auth/key', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("OpenRouter API key validation error:", {
+          status: response.status,
+          statusText: response.statusText,
+          errorText
+        });
+        return false;
+      }
+      
+      const data = await response.json();
+      console.log("OpenRouter API key validation successful:", data);
+      return true;
+    } catch (error) {
+      console.error("Error validating OpenRouter API key:", error);
+      return false;
+    }
+  };
+
   // Function to call OpenRouter API
   const fetchAIResponse = async (userMessage: string) => {
     setIsLoading(true);
     
     try {
+      // Validate API key first
+      const isKeyValid = await validateApiKey();
+      if (!isKeyValid) {
+        return "Sorry, there's an issue with the AI service credentials. Please try again later.";
+      }
+      
+      // Prepare headers and request data according to OpenRouter documentation
+      const refererUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : 'https://yousefowili.vercel.app';
+        
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': refererUrl,
+        'X-Title': 'AI Version of Yousef',
+      };
+      
+      const requestData = {
+        model: OPENROUTER_MODEL_ID,
+        messages: [
+          { 
+            role: "system", 
+            content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." 
+          },
+          ...messages.map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: msg.content
+          })),
+          { role: "user", content: userMessage }
+        ]
+      };
+      
+      console.log("Sending request to OpenRouter:", { 
+        url: OPENROUTER_API_URL,
+        headers: { ...headers, Authorization: 'Bearer sk-or-v1-****' }, // Log masked key
+        body: requestData 
+      });
+      
       const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '', // Required for OpenRouter
-          'X-Title': 'AI Version of Yousef' // Helpful for OpenRouter to identify your app
-        },
-        body: JSON.stringify({
-          model: OPENROUTER_MODEL_ID,
-          messages: [
-            { role: "system", content: "You're an AI version of someone called Yousef Owili. You're funny in a normal way, witty and charistmatic. make the replies max like one sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
-            ...messages.map(msg => ({
-              role: msg.sender === 'user' ? 'user' : 'assistant',
-              content: msg.content
-            })),
-            { role: "user", content: userMessage }
-          ]
-        }),
+        headers: headers,
+        body: JSON.stringify(requestData),
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`API error: ${response.status} - ${JSON.stringify(errorData)}`);
+        const errorText = await response.text();
+        console.error("OpenRouter API error:", {
+          status: response.status,
+          statusText: response.statusText,
+          errorText
+        });
+        throw new Error(`API error: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
-      const aiResponseContent = data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+      console.log("OpenRouter response:", data);
       
-      return aiResponseContent;
+      return data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
     } catch (error) {
       console.error("Error fetching AI response:", error);
       return "Sorry, there was an error connecting to the AI service. Please try again later.";

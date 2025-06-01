@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 // Configuration - You'll need to add your OpenRouter API key and model ID here
 const OPENROUTER_API_KEY = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ""; // Use environment variable
-const OPENROUTER_MODEL_ID = "anthropic/claude-3-haiku:free"; // Using a free model
+const OPENROUTER_MODEL_ID = "deepseek/deepseek-r1-0528:free"; // Using a free model
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 interface Message {

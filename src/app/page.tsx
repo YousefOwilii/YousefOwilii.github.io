@@ -225,7 +225,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Email</h3>
-                <p className="text-gray-600 dark:text-gray-300">yousefowili_official@outlook.com</p>
+                <p className="text-gray-600 dark:text-gray-300">hi@yousefowili.me</p>
               </div>
             </div>
           </div>

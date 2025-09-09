@@ -95,7 +95,7 @@ export default function ChatWidget() {
       return "Sorry, there was an error connecting to the AI service. Please try again later.";
     } finally {
       setIsLoading(false);
-    }
+    } 
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

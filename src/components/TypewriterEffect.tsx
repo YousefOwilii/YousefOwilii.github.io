@@ -7,6 +7,8 @@ interface TypewriterEffectProps {
   typingSpeed?: number;
   deletingSpeed?: number;
   delayBetweenStrings?: number;
+  loop?: boolean;
+  start?: boolean;
 }
 
 const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
@@ -14,12 +16,17 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   typingSpeed = 100,
   deletingSpeed = 50,
   delayBetweenStrings = 1000,
+  loop = true,
+  start = true,
 }) => {
   const [currentStringIndex, setCurrentStringIndex] = useState(0);
   const [currentText, setCurrentText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
+    if (!start || isComplete) return;
+
     const currentString = strings[currentStringIndex];
     
     const timeout = setTimeout(() => {
@@ -38,22 +45,27 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
         if (currentText.length > 0) {
           setCurrentText(currentString.substring(0, currentText.length - 1));
         } else {
-          // Move to next string
-          setIsDeleting(false);
-          setCurrentStringIndex((prevIndex) => (prevIndex + 1) % strings.length);
+          // Move to next string or stop
+          if (loop || currentStringIndex < strings.length - 1) {
+            setIsDeleting(false);
+            setCurrentStringIndex((prevIndex) => (prevIndex + 1) % strings.length);
+          } else {
+            setCurrentText(currentString); // Keep the final text
+            setIsComplete(true);
+          }
         }
       }
     }, isDeleting ? deletingSpeed : typingSpeed);
 
     return () => clearTimeout(timeout);
-  }, [currentText, isDeleting, currentStringIndex, strings, typingSpeed, deletingSpeed, delayBetweenStrings]);
+  }, [currentText, isDeleting, currentStringIndex, strings, typingSpeed, deletingSpeed, delayBetweenStrings, loop, isComplete, start]);
 
   return (
     <span className="text-blue-600 dark:text-blue-400">
       {currentText}
-      <span className="animate-blink">|</span>
+      {!isComplete && <span className="animate-blink">|</span>}
     </span>
   );
 };
 
-export default TypewriterEffect; 
+export default TypewriterEffect;

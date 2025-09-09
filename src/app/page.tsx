@@ -47,6 +47,7 @@ export default function Home() {
   const [contentCreationRef, contentCreationVisible] = useScrollAppear();
   const [technicalSkillsRef, technicalSkillsVisible] = useScrollAppear();
   const [softSkillsRef, softSkillsVisible] = useScrollAppear();
+  const [booksRef, booksVisible] = useScrollAppear();
 
   useEffect(() => {
     // Check if user has a preference stored
@@ -469,6 +470,68 @@ export default function Home() {
                   <div className="text-white/90 text-xs">Ability to tap into Flow State</div>
                   <div className="text-white/90 text-xs">Trial & error. Tenacity.</div>
                   <div className="text-white/90 text-xs">Pressure & stress resilience</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Books Read - Medium Box (2x2) */}
+            <div
+              ref={booksRef}
+              className={`col-span-2 row-span-2 bg-gradient-to-br from-gray-600 to-gray-800 rounded-3xl shadow-2xl p-6 md:p-8 relative overflow-hidden group transition-all duration-700 ease-out
+                ${booksVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
+              style={{ willChange: 'opacity, transform, filter' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute top-4 right-4 w-12 h-12 md:w-16 md:h-16">
+                <div className="w-full h-full bg-white/20 rounded-2xl flex items-center justify-center">
+                  <svg className="w-6 h-6 md:w-8 md:h-8 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative z-10 h-full flex flex-col">
+                <div className="text-white/90 text-xs md:text-sm font-medium mb-2 tracking-wide">BOOKS READ</div>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">Authors that Shaped Me</h3>
+                <div className="flex-1 overflow-y-auto max-h-48 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  <div className="grid grid-cols-1 gap-2 text-xs pr-2">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The 48 Laws of Power</div>
+                      <div className="text-white/80">Robert Greene</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">Why We Sleep</div>
+                      <div className="text-white/80">Matthew Walker</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">How to Win Friends & Influence People</div>
+                      <div className="text-white/80">Dale Carnegie</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">Atomic Habits</div>
+                      <div className="text-white/80">James Clear</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The Subtle Art of Not Giving a F*ck</div>
+                      <div className="text-white/80">Mark Manson</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">Rich Dad Poor Dad</div>
+                      <div className="text-white/80">Robert Kiyosaki</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The Psychology of Money</div>
+                      <div className="text-white/80">Morgan Housel</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The Greatest Secret</div>
+                      <div className="text-white/80">Rhonda Byrne</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-yellow-300">Currently Reading:</div>
+                      <div className="text-yellow-300 font-semibold">Influence: The Psychology of Persuasion</div>
+                      <div className="text-white/80">Robert B. Cialdini</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

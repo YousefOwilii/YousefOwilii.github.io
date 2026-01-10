@@ -104,6 +104,7 @@ export default function ChatWidget() {
 
     const userInput = inputValue.trim();
     setInputValue('');
+    
 
     // Add user message
     const newMessage: Message = {

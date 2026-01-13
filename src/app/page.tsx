@@ -22,6 +22,19 @@ function useScrollAppear() {
   }, []);
   return [ref, visible] as const;
 }
+
+// Configuration - You'll need to add your OpenRouter API key and model ID here
+const OPENROUTER_API_KEY = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ""; // Use environment variable
+const OPENROUTER_MODEL_ID = "x-ai/grok-3-mini-beta";
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+}
+
 import Image from "next/image";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -29,17 +42,21 @@ import ProjectCard from "../components/ProjectCard";
 import ContactForm from "../components/ContactForm";
 import TypewriterEffect from "../components/TypewriterEffect";
 import StylizedQuote from "../components/StylizedQuote";
-import ChatWidget from "../components/ChatWidget";
+import AICompanionPopout from "../components/AICompanionPopout";
 
 export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
   const [themeInitialized, setThemeInitialized] = useState(false);
 
+  // AI Companion Chat State
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   // Scroll animation hooks
   const [aboutHeadingRef, aboutHeadingVisible] = useScrollAppear();
   const [aboutQuoteRef, aboutQuoteVisible] = useScrollAppear();
-  const [statsRef, statsVisible] = useScrollAppear();
   const [contactRef, contactVisible] = useScrollAppear();
   const [aiProjectsRef, aiProjectsVisible] = useScrollAppear();
   const [webDevRef, webDevVisible] = useScrollAppear();
@@ -48,6 +65,87 @@ export default function Home() {
   const [technicalSkillsRef, technicalSkillsVisible] = useScrollAppear();
   const [softSkillsRef, softSkillsVisible] = useScrollAppear();
   const [booksRef, booksVisible] = useScrollAppear();
+
+  // Function to call OpenRouter API
+  const fetchAIResponse = async (userMessage: string) => {
+    setIsLoading(true);
+    
+    try {
+      // Check if API key is available
+      if (!OPENROUTER_API_KEY) {
+        console.error("OpenRouter API key is not set. Please add NEXT_PUBLIC_OPENROUTER_API_KEY to your environment variables.");
+        return "Sorry, the AI service is not properly configured. Please contact the administrator.";
+      }
+      
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
+          'X-Title': 'AI Companion on Yousefowili.me'
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL_ID,
+          messages: [
+            { role: "system", content: "When they say hi who are you, say your name, don't start stating all the information you have in one go.  Do not mention all the information about me unless they ask about it. If someone speaks in any language, say that you only reply in English sorry. No hyperbole. Avoid overusing emojis. Avoid over reacting. You're an AI version of someone called Yousef Owili. You're super funny in a normal way, witty and charistmatic. make the replies max like two sentence, very small indeed. You're a senior CS student at the british university in egypt. You're born in 12/12/2004, you're 20. You're Egyptian. You're a copy of him, but there are somethings the real yousef didn't tell you about. Right now you're inside his website, yousefowili.me. His website has a home, which has a cool typerwriter animation, and an about, and a contact section where you can shoot the real yousef an email if you want to conatct him, and a projects tab of all the projects I've done so far. If anyone asks you about yousef's love life, say that you're pretty sure he's a baller with girls but he doesn't tell anyone. You life caramel frappuchinos. You go to the gym and take creatine and on your jouney to become jacked as fuck. You absolutely and utterly honor your word. You answer only the questions you're asked nothing more. Seem a little bit professional not that much." },
+            ...messages.map(msg => ({
+              role: msg.sender === 'user' ? 'user' : 'assistant',
+              content: msg.content
+            })),
+            { role: "user", content: userMessage }
+          ]
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: { message: `HTTP error ${response.status}` } }));
+        throw new Error(`API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      }
+      
+      const data = await response.json();
+      const aiResponseContent = data.choices[0]?.message?.content || "Sorry, I couldn't process that request.";
+      
+      return aiResponseContent;
+    } catch (error) {
+      console.error("Error fetching AI response:", error);
+      return "Sorry, there was an error connecting to the AI service. Please try again later.";
+    } finally {
+      setIsLoading(false);
+    } 
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim() || isLoading) return;
+
+    const userInput = inputValue.trim();
+    setInputValue('');
+    
+
+    // Add user message
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: userInput,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+
+    // Get AI response
+    const aiContent = await fetchAIResponse(userInput);
+    
+    // Add AI response
+    const aiResponse: Message = {
+      id: (Date.now() + 1).toString(),
+      content: aiContent,
+      sender: 'ai',
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, aiResponse]);
+  };
 
   useEffect(() => {
     // Check if user has a preference stored
@@ -135,6 +233,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">
+      {/* AI Companion Popout */}
+      <AICompanionPopout />
+
       {/* Navigation */}
       <div className={`transition-all duration-700 ease-out
         ${heroVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 -translate-y-8 blur-md'}`}
@@ -142,9 +243,6 @@ export default function Home() {
       >
         <Navbar />
       </div>
-
-      {/* Chat Widget */}
-      <ChatWidget />
 
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-16 md:py-24">
@@ -185,90 +283,111 @@ export default function Home() {
             >
               Get in Touch
             </a>
-            <a 
-              href="#projects" 
-              className="px-6 py-3 border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-400 text-gray-800 dark:text-white font-medium rounded-lg transition"
-            >
-              View My Work
-            </a>
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="bg-white dark:bg-gray-800 py-16 md:py-24">
-        <div className="container mx-auto px-6">
-          <h2
-            ref={aboutHeadingRef}
-            className={`text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12 transition-all duration-700 ease-out
-              ${aboutHeadingVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
-            style={{ willChange: 'opacity, transform, filter' }}
-          >
-            About Me
-          </h2>
-          <div className="max-w-3xl mx-auto">
-            <div
-              ref={aboutQuoteRef}
-              className={`transition-all duration-700 ease-out
-                ${aboutQuoteVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
-              style={{ willChange: 'opacity, transform, filter' }}
-            >
-              <StylizedQuote>
-                <p className="mb-4">
-                  The world calls me Owili.
-                </p>
-                <p className="mb-4">
-                  I'm currently studying computer science at the British University in Egypt, majoring in Artificial Intelligence. I always had this obsession of wanting to do "something". Something that is positively impactful in some regard. It started by seeing the dedication of some very hard working and talented people, making me tap into courses, videos, anything that can make me more like them. I worked on projects from web development, to developing fully fledged AI agents, to creating copy and fascinations for small businesses, to designing and creating content for local restaurants, gyms and brands.
-                </p>
-                <p>
-                  I'm a perfectionist, but I don't let it negatively affect my progress. I do things perfect and quick. I'm fast not sluggish. I completely and utterly honor my word.
-                </p>
-              </StylizedQuote>
-            </div>
+      {/* AI Companion Interface */}
+      <section id="ai" className="container mx-auto px-4 md:px-6 py-10 md:py-14">
+        <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl shadow-2xl p-4 md:p-10">
+          <div className="inline-flex items-center gap-3 rounded-full border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 mb-6">
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+            Ask me something
           </div>
-          
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div ref={statsRef} className={`col-span-4 transition-all duration-700 ease-out
-              ${statsVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
-              style={{ willChange: 'opacity, transform, filter' }}
-            >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div className="text-center">
-                  <div className="text-blue-600 dark:text-blue-400 text-4xl font-bold mb-2">
-                    <TypewriterEffect strings={["3+"]} loop={false} start={statsVisible} />
+          <div className="grid gap-6 md:gap-10 grid-cols-1 md:grid-cols-[280px_1fr] items-start md:items-center">
+            <div className="relative mx-auto md:mx-0 w-full max-w-[200px] md:max-w-none">
+              <div className="aspect-[3/4] w-full rounded-2xl bg-gradient-to-b from-blue-500/25 to-transparent border border-blue-400/40 shadow-2xl overflow-hidden">
+                <video
+                  src="/images/ai-companion.mp4"
+                  autoPlay
+                  muted
+                  playsInline
+                  onEnded={(e) => {
+                    const video = e.currentTarget;
+                    setTimeout(() => {
+                      video.play();
+                    }, 10000);
+                  }}
+                  className="object-cover w-full h-full opacity-90"
+                />
+              </div>
+              <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+                Joe
+              </p>
+            </div>
+            <div className="space-y-4 w-full">
+              <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 p-4 md:p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Chat with Yousef</p>
+                    <p className="text-xs text-gray-400">Copywriter • AI Agent Dev</p>
                   </div>
-                  <div className="text-gray-600 dark:text-gray-300">Years Experience</div>
+                  <span className="text-[0.65rem] uppercase tracking-[0.3em] text-gray-400">Live</span>
                 </div>
-                <div className="text-center">
-                  <div className="text-blue-600 dark:text-blue-400 text-4xl font-bold mb-2">
-                    <TypewriterEffect strings={["20+"]} loop={false} start={statsVisible} />
-                  </div>
-                  <div className="text-gray-600 dark:text-gray-300">Projects Completed</div>
+                <div className="space-y-3 min-h-[250px] md:min-h-[200px] max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {messages.length === 0 ? (
+                    <div className="text-center text-gray-500 dark:text-gray-400 py-10">
+                      No messages yet. Start a conversation!
+                    </div>
+                  ) : (
+                    messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`rounded-2xl px-4 py-3 text-sm shadow-inner break-words ${
+                          message.sender === 'user'
+                            ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 ml-4'
+                            : 'bg-blue-700/90 text-white mr-4'
+                        }`}
+                      >
+                        <p>
+                          <span className={`font-semibold ${
+                            message.sender === 'user' 
+                              ? 'text-gray-800 dark:text-white' 
+                              : ''
+                          }`}>
+                            {message.sender === 'user' ? 'You:' : 'AI:'}
+                          </span>{' '}
+                          {message.content}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                  {isLoading && (
+                    <div className="rounded-2xl bg-gray-200 dark:bg-gray-700 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 mr-4">
+                      <div className="flex space-x-2 justify-center">
+                        <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 animate-bounce" style={{ animationDelay: '600ms' }}></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="text-center">
-                  <div className="text-blue-600 dark:text-blue-400 text-4xl font-bold mb-2">
-                    <TypewriterEffect strings={["15+"]} loop={false} start={statsVisible} />
-                  </div>
-                  <div className="text-gray-600 dark:text-gray-300">Happy Clients</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-blue-600 dark:text-blue-400 text-4xl font-bold mb-2">
-                    <TypewriterEffect strings={["5+"]} loop={false} start={statsVisible} />
-                  </div>
-                  <div className="text-gray-600 dark:text-gray-300">Technologies</div>
-                </div>
+                <form onSubmit={handleSubmit} className="mt-4 flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder={isLoading ? "AI is thinking..." : "Type your question..."}
+                    disabled={isLoading}
+                    className="flex-1 rounded-full border border-transparent bg-white dark:bg-gray-900/60 px-4 py-2 text-sm text-gray-700 dark:text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!inputValue.trim() || isLoading}
+                    className="rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-lg hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                  >
+                    Send
+                  </button>
+                </form>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-
       {/* Projects & Skills Section - Bento Box Design */}
       <section id="projects" className="py-16 md:py-24 bg-gray-50 dark:bg-gray-900">
         <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8">
-          {/* Header with Bento Box Design trend text */}
-          
           {/* Bento Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-3 gap-6 auto-rows-[minmax(180px,1fr)]">
             {/* AI Projects - Large Box (2x3) */}
@@ -377,6 +496,96 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Soft Skills - Small Box (1x1) - Now next to Apps */}
+            <div
+              ref={softSkillsRef}
+              className={`col-span-1 row-span-1 bg-gradient-to-r from-gray-500 to-gray-700 rounded-3xl shadow-2xl p-4 md:p-6 relative overflow-hidden group transition-all duration-700 ease-out
+                ${softSkillsVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
+              style={{ willChange: 'opacity, transform, filter' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              {/* Animated Heart Icon */}
+              <div className="absolute top-2 right-2 w-8 h-8 md:w-10 md:h-10">
+                <div className="w-full h-full bg-white/20 rounded-xl flex items-center justify-center">
+                  <svg className="w-4 h-4 md:w-5 md:h-5 text-white animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative z-10 h-full flex flex-col">
+                <div className="text-white/90 text-xs font-medium mb-1 tracking-wide">SOFT SKILLS</div>
+                <h3 className="text-sm md:text-lg font-bold text-white mb-2">What Drives Me</h3>
+                <div className="flex flex-col gap-1">
+                  <div className="text-white/90 text-xs">Efficient Time Management</div>
+                  <div className="text-white/90 text-xs">Ability to tap into Flow State</div>
+                  <div className="text-white/90 text-xs">Trial & error. Tenacity.</div>
+                  <div className="text-white/90 text-xs">Pressure & stress resilience</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Books Read - Medium Box (2x2) - Moved to replace Soft Skills' old spot */}
+            <div
+              ref={booksRef}
+              className={`col-span-2 row-span-2 bg-gradient-to-br from-gray-600 to-gray-800 rounded-3xl shadow-2xl p-6 md:p-8 relative overflow-hidden group transition-all duration-700 ease-out
+                ${booksVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
+              style={{ willChange: 'opacity, transform, filter' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute top-4 right-4 w-12 h-12 md:w-16 md:h-16">
+                <div className="w-full h-full bg-white/20 rounded-2xl flex items-center justify-center">
+                  <svg className="w-6 h-6 md:w-8 md:h-8 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+              </div>
+              <div className="relative z-10 h-full flex flex-col">
+                <div className="text-white/90 text-xs md:text-sm font-medium mb-2 tracking-wide">BOOKS READ</div>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">Authors that Shaped Me</h3>
+                <div className="flex-1 overflow-y-auto max-h-48 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  <div className="grid grid-cols-1 gap-2 text-xs pr-2">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The 48 Laws of Power</div>
+                      <div className="text-white/80">Robert Greene</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">Why We Sleep</div>
+                      <div className="text-white/80">Matthew Walker</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">How to Win Friends & Influence People</div>
+                      <div className="text-white/80">Dale Carnegie</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">Atomic Habits</div>
+                      <div className="text-white/80">James Clear</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The Subtle Art of Not Giving a F*ck</div>
+                      <div className="text-white/80">Mark Manson</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">Rich Dad Poor Dad</div>
+                      <div className="text-white/80">Robert Kiyosaki</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The Psychology of Money</div>
+                      <div className="text-white/80">Morgan Housel</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-white">The Greatest Secret</div>
+                      <div className="text-white/80">Rhonda Byrne</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
+                      <div className="font-semibold text-yellow-300">Currently Reading:</div>
+                      <div className="text-yellow-300 font-semibold">Influence: The Psychology of Persuasion</div>
+                      <div className="text-white/80">Robert B. Cialdini</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Content Creation - Large Box (2x2) */}
             <div
               ref={contentCreationRef}
@@ -445,99 +654,41 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            {/* Soft Skills - Small Box (1x1) */}
+      {/* About Section - Moved to bottom */}
+      <section id="about" className="bg-white dark:bg-gray-800 py-16 md:py-24">
+        <div className="container mx-auto px-6">
+          <h2
+            ref={aboutHeadingRef}
+            className={`text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12 transition-all duration-700 ease-out
+              ${aboutHeadingVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
+            style={{ willChange: 'opacity, transform, filter' }}
+          >
+            About Me
+          </h2>
+          <div className="max-w-3xl mx-auto">
             <div
-              ref={softSkillsRef}
-              className={`col-span-1 row-span-1 bg-gradient-to-r from-gray-500 to-gray-700 rounded-3xl shadow-2xl p-4 md:p-6 relative overflow-hidden group transition-all duration-700 ease-out
-                ${softSkillsVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
+              ref={aboutQuoteRef}
+              className={`transition-all duration-700 ease-out
+                ${aboutQuoteVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
               style={{ willChange: 'opacity, transform, filter' }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              {/* Animated Heart Icon */}
-              <div className="absolute top-2 right-2 w-8 h-8 md:w-10 md:h-10">
-                <div className="w-full h-full bg-white/20 rounded-xl flex items-center justify-center">
-                  <svg className="w-4 h-4 md:w-5 md:h-5 text-white animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="relative z-10 h-full flex flex-col">
-                <div className="text-white/90 text-xs font-medium mb-1 tracking-wide">SOFT SKILLS</div>
-                <h3 className="text-sm md:text-lg font-bold text-white mb-2">What Drives Me</h3>
-                <div className="flex flex-col gap-1">
-                  <div className="text-white/90 text-xs">Efficient Time Management</div>
-                  <div className="text-white/90 text-xs">Ability to tap into Flow State</div>
-                  <div className="text-white/90 text-xs">Trial & error. Tenacity.</div>
-                  <div className="text-white/90 text-xs">Pressure & stress resilience</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Books Read - Medium Box (2x2) */}
-            <div
-              ref={booksRef}
-              className={`col-span-2 row-span-2 bg-gradient-to-br from-gray-600 to-gray-800 rounded-3xl shadow-2xl p-6 md:p-8 relative overflow-hidden group transition-all duration-700 ease-out
-                ${booksVisible ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-md'}`}
-              style={{ willChange: 'opacity, transform, filter' }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute top-4 right-4 w-12 h-12 md:w-16 md:h-16">
-                <div className="w-full h-full bg-white/20 rounded-2xl flex items-center justify-center">
-                  <svg className="w-6 h-6 md:w-8 md:h-8 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-              </div>
-              <div className="relative z-10 h-full flex flex-col">
-                <div className="text-white/90 text-xs md:text-sm font-medium mb-2 tracking-wide">BOOKS READ</div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">Authors that Shaped Me</h3>
-                <div className="flex-1 overflow-y-auto max-h-48 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-                  <div className="grid grid-cols-1 gap-2 text-xs pr-2">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">The 48 Laws of Power</div>
-                      <div className="text-white/80">Robert Greene</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">Why We Sleep</div>
-                      <div className="text-white/80">Matthew Walker</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">How to Win Friends & Influence People</div>
-                      <div className="text-white/80">Dale Carnegie</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">Atomic Habits</div>
-                      <div className="text-white/80">James Clear</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">The Subtle Art of Not Giving a F*ck</div>
-                      <div className="text-white/80">Mark Manson</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">Rich Dad Poor Dad</div>
-                      <div className="text-white/80">Robert Kiyosaki</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">The Psychology of Money</div>
-                      <div className="text-white/80">Morgan Housel</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-white">The Greatest Secret</div>
-                      <div className="text-white/80">Rhonda Byrne</div>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 border border-white/30">
-                      <div className="font-semibold text-yellow-300">Currently Reading:</div>
-                      <div className="text-yellow-300 font-semibold">Influence: The Psychology of Persuasion</div>
-                      <div className="text-white/80">Robert B. Cialdini</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <StylizedQuote>
+                <p className="mb-4">
+                  The world calls me Owili.
+                </p>
+                <p className="mb-4">
+                  I'm currently studying computer science at the British University in Egypt, majoring in Artificial Intelligence. I always had this obsession of wanting to do "something". Something that is positively impactful in some regard. It started by seeing the dedication of some very hard working and talented people, making me tap into courses, videos, anything that can make me more like them. I worked on projects from web development, to developing fully fledged AI agents, to creating copy and fascinations for small businesses, to designing and creating content for local restaurants, gyms and brands.
+                </p>
+                <p>
+                  I'm a perfectionist, but I don't let it negatively affect my progress. I do things perfect and quick. I'm fast not sluggish. I completely and utterly honor my word.
+                </p>
+              </StylizedQuote>
             </div>
           </div>
-          {/* Call to Action */}
-          
         </div>
       </section>
 

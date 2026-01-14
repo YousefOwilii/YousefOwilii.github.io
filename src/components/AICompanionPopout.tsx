@@ -50,7 +50,7 @@ export default function AICompanionPopout() {
           {/* AI Companion Character - Centered above modal */}
           <div className="absolute -top-10 sm:-top-24 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none">
             <Image
-              src="/images/ai-companion.png"
+              src="/images/ai-companion-2.webp"
               alt="AI Companion - Joe"
               width={280}
               height={280}

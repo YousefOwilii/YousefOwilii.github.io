@@ -7,16 +7,25 @@ const PLAYERS = {
 
 const MILESTONES = [5, 10, 25, 50, 75, 100, 150, 200]
 const FINAL_GOAL = MILESTONES[MILESTONES.length - 1]
+const TEAM_MILESTONES = MILESTONES.map((m) => m * 2)
 const STORAGE_KEY = 'job-race-counts'
 const POLL_MS = 15000
 
+function findNext(list, count) {
+  return list.find((m) => m > count) ?? null
+}
+
+function findPrev(list, count) {
+  const passed = list.filter((m) => m <= count)
+  return passed.length ? passed[passed.length - 1] : 0
+}
+
 function nextMilestone(count) {
-  return MILESTONES.find((m) => m > count) ?? null
+  return findNext(MILESTONES, count)
 }
 
 function prevMilestone(count) {
-  const passed = MILESTONES.filter((m) => m <= count)
-  return passed.length ? passed[passed.length - 1] : 0
+  return findPrev(MILESTONES, count)
 }
 
 function loadLocal() {
@@ -70,6 +79,9 @@ export default function App() {
   function bump(key, delta) {
     const next = Math.max(0, counts[key] + delta)
     if (delta > 0 && MILESTONES.includes(next)) celebrate(PLAYERS[key].name, next)
+    if (delta > 0 && TEAM_MILESTONES.includes(total + delta)) {
+      celebrate('The team', total + delta)
+    }
     if (cloud) {
       fetch('/api/counts', {
         method: 'POST',
@@ -131,6 +143,8 @@ export default function App() {
         </div>
       </section>
 
+      <TeamProgress total={total} />
+
       <footer className="colophon">
         <span className={`sync-dot ${cloud ? 'on' : ''}`} />
         {cloud ? 'Synced to the cloud' : 'Saved on this device'}
@@ -138,6 +152,33 @@ export default function App() {
 
       {toast && <div className="toast">{toast}</div>}
     </div>
+  )
+}
+
+function TeamProgress({ total }) {
+  const next = findNext(TEAM_MILESTONES, total)
+  const prev = findPrev(TEAM_MILESTONES, total)
+  const segPct = next === null ? 100 : ((total - prev) / (next - prev)) * 100
+
+  return (
+    <section className="team">
+      <div className="team-head">
+        <span className="team-title">Team Progress</span>
+        <span className="team-note">
+          {next === null ? 'Every team milestone conquered ✦' : `${next - total} to go until ${next} combined`}
+        </span>
+      </div>
+      <div className="team-track">
+        <div className="team-fill" style={{ width: `${segPct}%` }} />
+      </div>
+      <div className="badges team-badges">
+        {TEAM_MILESTONES.map((m) => (
+          <span key={m} className={`badge ${total >= m ? 'earned team-earned' : ''}`}>
+            {m}
+          </span>
+        ))}
+      </div>
+    </section>
   )
 }
 
